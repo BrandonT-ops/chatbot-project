@@ -317,7 +317,7 @@ const Header = () => {
                 <div
                   id="g_id_onload"
                   data-client_id="508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com"
-                  data-login_uri="https://maguida.raia.cm/auth/login/"
+                  data-login_uri="https://maguida.raia.cm/auth/google/"
                   data-auto_prompt="false"
                 >
                   <div
