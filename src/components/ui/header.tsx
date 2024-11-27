@@ -18,6 +18,7 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
+import { useChatStore } from "@/lib/store";
 
 const navigation = [
   { name: "Dashboard", href: "#", current: true },
@@ -32,14 +33,59 @@ function classNames(...classes: string[]) {
 
 const Header = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { setSearchResults } = useChatStore();
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Searching for:", searchTerm);
-    // Add your search logic here
+  
+    const trimmedTerm = searchTerm.trim();
+  
+    if (!trimmedTerm) {
+      setSearchResults(null); // Reset search if input is empty
+      return;
+    }
+  
+    try {
+      const response = await fetch(
+        `https://maguida.raia.cm/shop/search/?query=${encodeURIComponent(trimmedTerm)}`
+      );
+  
+      if (!response.ok) {
+        throw new Error(`Search request failed with status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+    
+      // Check if the response is an array
+      if (Array.isArray(data) && data.length > 0) {
+        setSearchResults({
+          query: trimmedTerm,
+          results: data, // Use the array directly
+        });
+      } else {
+        setSearchResults({
+          query: trimmedTerm,
+          results: [], // No results found
+        });
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+  
+      // Handle error state
+      setSearchResults({
+        query: trimmedTerm,
+        results: [], // Empty results on error
+      });
+    }
   };
+  
+  
+  
   return (
-    <Disclosure as="nav" className="bg-white border-b-2 border-gray-200 fixed top-0 w-full z-50">
+    <Disclosure
+      as="nav"
+      className="bg-white border-b-2 border-gray-200 fixed top-0 w-full z-50"
+    >
       <div className="mx-auto max-w- px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
           <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
@@ -99,7 +145,13 @@ const Header = () => {
                 type="text"
                 placeholder="Search..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  // If input is emptied, reset search results
+                  if (!e.target.value.trim()) {
+                    setSearchResults(null);
+                  }
+                }}
                 className=" placeholder:text-sm bg-[#F0F2F5] text-gray-900 pl-10 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-300 w-full sm:w-64"
               />
             </form>

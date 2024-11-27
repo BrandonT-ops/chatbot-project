@@ -16,11 +16,29 @@ export type FileMetadata = {
   url?: string;
 }
 
+export interface ProductSearchResult {
+  url: string;
+  name: string;
+  price: number;
+  disponibilite: string;
+  categorie: string;
+  image_url: string;
+  score: number;
+}
+
+export interface SearchResultType {
+  query: string;
+  results: ProductSearchResult[];
+}
+
 interface ChatStore {
   messages: MessageType[];
   addMessage: (message: MessageType) => void;
   updateMessage: (id: string, updates: Partial<MessageType>) => void;
   clearMessages: () => void;
+  searchResults: SearchResultType | null;
+  setSearchResults: (results: SearchResultType | null) => void;
+
 }
 
 export const useChatStore = create<ChatStore>((set) => ({
@@ -33,5 +51,7 @@ export const useChatStore = create<ChatStore>((set) => ({
       msg.id === id ? { ...msg, ...updates } : msg
     )
   })),
-  clearMessages: () => set({ messages: [] })
+  clearMessages: () => set({ messages: [] }),
+  searchResults: null,
+  setSearchResults: (results) => set({ searchResults: results }),
 }));

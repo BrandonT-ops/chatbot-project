@@ -14,7 +14,7 @@ const ChatInterface: React.FC = () => {
   const [input, setInput] = useState("");
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { messages, addMessage } = useChatStore();
+  const { messages, addMessage , searchResults} = useChatStore();
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
@@ -125,6 +125,71 @@ const ChatInterface: React.FC = () => {
     );
   };
 
+  const renderSearchResults = () => {
+    if (!searchResults) return null;
+  
+    return (
+      <div className="space-y-4">
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">
+            Search Results for {searchResults.query}
+          </h2>
+          {searchResults.results.length === 0 ? (
+            <p className="text-gray-600">No results found.</p>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {searchResults.results.map((product, index) => (
+                <div 
+                  key={index} 
+                  className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition"
+                >
+                  <Image 
+                    src={product.image_url || "/api/placeholder/200/200"} 
+                    alt={product.name} 
+                    width={200} 
+                    height={200} 
+                    className="w-full h-48 object-cover rounded-t-lg"
+                    unoptimized
+                  />
+                  <div className="mt-2">
+                    <h3 className="font-semibold text-gray-800">{product.name}</h3>
+                    <p className="text-gray-600">{product.price} FCFA</p>
+                    <p className={`text-sm ${
+                      product.disponibilite === 'Out of Stock !' 
+                        ? 'text-red-500' 
+                        : 'text-green-500'
+                    }`}>
+                      {product.disponibilite}
+                    </p>
+                    <button 
+                      className="mt-2 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
+                      onClick={() => {
+                        addMessage({
+                          role: 'assistant',
+                          content: `Details for ${product.name}:\n\nPrice: ${product.price} FCFA\nAvailability: ${product.disponibilite}\nCategory: ${product.categorie}\n\nFull details: ${product.url}`,
+                        });
+                      }}
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const writeNothing = () => {
+    if (!searchResults) return null;
+    return (
+      <div></div>
+    );
+  }
+
+
   return (
     <div className="flex flex-col min-h-screen pt-16 bg-white">
       <div className="w-full max-w-5xl mx-auto flex-grow flex flex-col mt-8">
@@ -132,11 +197,19 @@ const ChatInterface: React.FC = () => {
         <div className="flex-grow bg-white rounded-lg p-6">
           {/* Title */}
           <h1 className="text-3xl font-bold text-gray-800 mb-6">
-            Need help finding a product ?
+            {searchResults 
+              ? `Search Results for "${searchResults.query}"` 
+              : "Need help finding a product?"
+            }
           </h1>
 
           {/* Chat Messages Container */}
           <div className="flex-grow overflow-y-auto mb-6 space-y-4">
+
+          {searchResults ? (
+              renderSearchResults()
+            ) : (
+              <>
             {/* Default AI Initial Message */}
             <div className="flex items-start space-x-3">
               <Image
@@ -214,6 +287,8 @@ const ChatInterface: React.FC = () => {
                 )}
               </div>
             ))}
+              </>
+            )}
           </div>
 
           {/* File Preview */}
@@ -247,6 +322,11 @@ const ChatInterface: React.FC = () => {
           )}
 
           {/* Input Section */}
+          {searchResults ? (
+              //renderSearchResults()
+              writeNothing()
+            ) : (
+              <>
           <div className="flex items-center space-x-2 px-12">
             {/* Hidden file input */}
             <input
@@ -285,6 +365,8 @@ const ChatInterface: React.FC = () => {
               Send
             </button>
           </div>
+          </>
+            )}
         </div>
 
         {/* Copyright */}
