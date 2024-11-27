@@ -7,17 +7,17 @@ import {
   PaperClipIcon,
   DocumentIcon,
   XMarkIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { motion } from "framer-motion";
-//import SearchResults from "@/app/search/page";
-// import Link from "next/link";
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState("");
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { messages, addMessage } = useChatStore();
+  const { messages, addMessage, clearMessages } = useChatStore();
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
@@ -53,31 +53,33 @@ const ChatInterface: React.FC = () => {
 
     addMessage(userMessage);
 
-    try {
-      // Prepare form data for backend
-      const formData = new FormData();
-      formData.append("message", input);
-      pendingFiles.forEach((file) => {
-        formData.append("files", file);
-      });
+    setIsTyping(true);
 
+    try {
       // Send to Django backend
       const response = await fetch("/api/chat", {
         method: "POST",
-        body: formData,
+        body: JSON.stringify({ messages }),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       const data = await response.json();
 
-      // Add AI response
-      const aiMessage: MessageType = {
-        role: "assistant",
-        content: data.message,
-        images: data.images,
-        metadata: data.metadata,
-      };
+      if (data.message) {
+        // Add AI response
+        const aiMessage: MessageType = {
+          role: "assistant",
+          content: data.message.content,
+          images: data.message.images || [],
+          metadata: data.message.metadata || {},
+        };
 
-      addMessage(aiMessage);
+        addMessage(aiMessage);
+      } else {
+        console.error("Invalid response structure:", data);
+      }
 
       // Reset input and files
       setInput("");
@@ -85,6 +87,8 @@ const ChatInterface: React.FC = () => {
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error("Chat error:", error);
+    } finally {
+      setIsTyping(false);
     }
   };
 
@@ -137,102 +141,9 @@ const ChatInterface: React.FC = () => {
     );
   };
 
-  // const renderSearchResults = () => {
-  //   if (!searchResults) return null;
-
-  //   if (searchResults.isLoading) {
-  //     return (
-  //       <div className="space-y-4">
-  //         <div className="bg-blue-50 p-4 rounded-lg">
-  //           <h2 className="text-lg font-semibold text-gray-800 mb-3">
-  //             Searching for {searchResults.query}...
-  //           </h2>
-  //           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-  //             {[1, 2, 3, 4].map((_, index) => (
-  //               <motion.div
-  //                 key={index}
-  //                 initial={{ opacity: 0, scale: 0.5 }}
-  //                 animate={{ opacity: 1, scale: 1 }}
-  //                 transition={{ duration: 0.5 }}
-  //                 className="bg-white border rounded-lg p-4 shadow-sm animate-pulse"
-  //               >
-  //                 <div className="h-48 bg-gray-300 rounded-t-lg mb-4"></div>
-  //                 <div className="space-y-2">
-  //                   <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-  //                   <div className="h-4 bg-gray-300 rounded w-1/2"></div>
-  //                   <div className="h-4 bg-gray-300 rounded w-1/3"></div>
-  //                 </div>
-  //               </motion.div>
-  //             ))}
-  //           </div>
-  //         </div>
-  //       </div>
-  //     );
-  //   }
-
-  //   return (
-  //     <div className="space-y-4">
-  //       <div className="bg-blue-50 p-4 rounded-lg">
-  //         <h2 className="text-lg font-semibold text-gray-800 mb-3">
-  //           Search Results for {searchResults.query}
-  //         </h2>
-  //         {searchResults.results.length === 0 ? (
-  //           <p className="text-gray-600">No results found.</p>
-  //         ) : (
-  //           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-  //             {searchResults.results.map((product, index) => (
-  //               <motion.div
-  //                 key={index}
-  //                 initial={{ opacity: 0, scale: 0.5 }}
-  //                 animate={{ opacity: 1, scale: 1 }}
-  //                 transition={{ duration: 0.5 }}
-  //                 className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition"
-  //               >
-  //                 <Image
-  //                   src={product.image_url || "/api/placeholder/200/200"}
-  //                   alt={product.name}
-  //                   width={200}
-  //                   height={200}
-  //                   className="w-full h-48 object-cover rounded-t-lg"
-  //                   unoptimized
-  //                 />
-  //                 <div className="mt-2">
-  //                   <h3 className="font-semibold text-gray-800">
-  //                     {product.name}
-  //                   </h3>
-  //                   <p className="text-gray-600">{product.price} FCFA</p>
-  //                   <p
-  //                     className={`text-sm ${
-  //                       product.disponibilite === "Out of Stock !"
-  //                         ? "text-red-500"
-  //                         : "text-green-500"
-  //                     }`}
-  //                   >
-  //                     {product.disponibilite}
-  //                   </p>
-  //                   <Link href={product.url} passHref>
-  //                     <a
-  //                       target="_blank"
-  //                       rel="noopener noreferrer"
-  //                       className="mt-2 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition inline-block text-center"
-  //                     >
-  //                       View Details
-  //                     </a>
-  //                   </Link>
-  //                 </div>
-  //               </motion.div>
-  //             ))}
-  //           </div>
-  //         )}
-  //       </div>
-  //     </div>
-  //   );
-  // };
-
-  // const writeNothing = () => {
-  //   if (!searchResults) return null;
-  //   return <div></div>;
-  // };
+  const handleClearChat = () => {
+    clearMessages();
+  };
 
   return (
     <motion.div
@@ -256,90 +167,128 @@ const ChatInterface: React.FC = () => {
 
           {/* Chat Messages Container */}
           <div className="flex-grow overflow-y-auto mb-6 space-y-4">
-                {/* Default AI Initial Message */}
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="flex items-start space-x-3"
-                >
-                  <Image
-                    width={100}
-                    height={100}
-                    alt="Pp"
-                    src="assets/chat_icon.svg"
-                    className="size-8 rounded-full"
-                  />
-                  <div className="bg-white px-1 rounded-lg flex-grow ">
-                    <div className="flex items-center mb-2">
-                      <span className="font-semibold text-gray-800 mr-2">
-                        Maguida
-                      </span>
-                    </div>
-                    <p className="text-gray-600 text-sm text-justify max-w-4xl">
-                      Hi there! I&apos;m Maguida, your personal shopping
-                      assistant. I can help you find the perfect product! Just
-                      tell me what you&apos;re looking for.
-                    </p>
-                  </div>
-                </motion.div>
+            {/* Default AI Initial Message */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex items-start space-x-3"
+            >
+              <Image
+                width={100}
+                height={100}
+                alt="Pp"
+                src="assets/chat_icon.svg"
+                className="size-8 rounded-full"
+              />
+              <div className="bg-white px-1 rounded-lg flex-grow ">
+                <div className="flex items-center mb-2">
+                  <span className="font-semibold text-gray-800 mr-2">
+                    Maguida
+                  </span>
+                </div>
+                <p className="text-gray-600 text-sm text-justify max-w-4xl">
+                  Hi there! I&apos;m Maguida, your personal shopping
+                  assistant. I can help you find the perfect product! Just
+                  tell me what you&apos;re looking for.
+                </p>
+              </div>
+            </motion.div>
 
-                {/* Existing Messages */}
-                {messages.map((msg, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className={`flex ${
-                      msg.role === "user" ? "justify-start" : "justify-start"
-                    }`}
-                  >
-                    {msg.role === "user" ? (
-                      // User message
-                      <div className="flex items-start space-x-3 my-3">
-                        <Image
-                          width={100}
-                          height={100}
-                          alt="Pp"
-                          src="assets/profile_picture.svg"
-                          className="size-8 rounded-full"
-                        />
-                        <div className="bg-white px-1 rounded-lg flex-grow">
-                          <div className="flex items-center mb-2">
-                            <span className="font-semibold text-gray-800 mr-2">
-                              User
-                            </span>
-                          </div>
-                          <div className="text-gray-600 text-sm text-justify max-w-4xl">
-                            {renderMessageContent(msg)}
-                          </div>
-                        </div>
+            {/* Existing Messages */}
+            {messages.map((msg, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className={`flex ${
+                  msg.role === "user" ? "justify-start" : "justify-start"
+                }`}
+              >
+                {msg.role === "user" ? (
+                  // User message
+                  <div className="flex items-start space-x-3 my-3">
+                    <Image
+                      width={100}
+                      height={100}
+                      alt="Pp"
+                      src="assets/profile_picture.svg"
+                      className="size-8 rounded-full"
+                    />
+                    <div className="bg-white px-1 rounded-lg flex-grow">
+                      <div className="flex items-center mb-2">
+                        <span className="font-semibold text-gray-800 mr-2">
+                          User
+                        </span>
                       </div>
-                    ) : (
-                      // AI message
-                      <div className="flex items-start space-x-3">
-                        <Image
-                          width={100}
-                          height={100}
-                          alt="Maguida Chat Icon"
-                          src="assets/chat_icon.svg"
-                          className="size-8 rounded-full"
-                        />
-                        <div className="bg-white px-1 rounded-lg flex-grow">
-                          <div className="flex items-center mb-2">
-                            <span className="font-semibold text-gray-800 mr-2">
-                              Maguida
-                            </span>
-                          </div>
-                          <div className="text-gray-600 text-sm text-justify max-w-4xl">
-                            {renderMessageContent(msg)}
-                          </div>
-                        </div>
+                      <div className="text-gray-600 text-sm text-justify max-w-4xl">
+                        {renderMessageContent(msg)}
                       </div>
-                    )}
-                  </motion.div>
-                ))}
+                    </div>
+                  </div>
+                ) : (
+                  // AI message
+                  <div className="flex items-start space-x-3">
+                    <Image
+                      width={100}
+                      height={100}
+                      alt="Maguida Chat Icon"
+                      src="assets/chat_icon.svg"
+                      className="size-8 rounded-full"
+                    />
+                    <div className="bg-white px-1 rounded-lg flex-grow">
+                      <div className="flex items-center mb-2">
+                        <span className="font-semibold text-gray-800 mr-2">
+                          Maguida
+                        </span>
+                      </div>
+                      <div className="text-gray-600 text-sm text-justify max-w-4xl">
+                        {renderMessageContent(msg)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            ))}
+
+            {/* Typing Indicator */}
+            {isTyping && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex items-start space-x-3"
+              >
+                <Image
+                  width={100}
+                  height={100}
+                  alt="Maguida Chat Icon"
+                  src="assets/chat_icon.svg"
+                  className="size-8 rounded-full"
+                />
+                <div className="bg-white px-1 rounded-lg flex-grow">
+                  <div className="flex items-center mb-2">
+                    <span className="font-semibold text-gray-800 mr-2">
+                      Maguida
+                    </span>
+                  </div>
+                  <div className="text-gray-600 text-sm text-justify max-w-4xl">
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{
+                        duration: 0.5,
+                        repeat: Infinity,
+                        repeatType: "loop",
+                      }}
+                    >
+                      <span>Typing...</span>
+                    </motion.div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
 
           {/* File Preview */}
@@ -379,51 +328,58 @@ const ChatInterface: React.FC = () => {
           )}
 
           {/* Input Section */}
-          
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex items-center space-x-2"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center space-x-2"
+          >
+            {/* Hidden file input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              multiple
+              onChange={handleFileUpload}
+              className="hidden"
+              accept="image/*,application/pdf,.doc,.docx,.txt,.png,.svg,.jpg,.jpeg"
+            />
+
+            {/* Text input */}
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+              className="text-gray-900 text-sm flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+              placeholder="Chat with me..."
+            />
+
+            {/* File upload button */}
+            <button
+              onClick={triggerFileInput}
+              className="bg-gray-200 p-3 rounded-lg hover:bg-gray-300 transition"
             >
-              {/* Hidden file input */}
-              <input
-                type="file"
-                ref={fileInputRef}
-                multiple
-                onChange={handleFileUpload}
-                className="hidden"
-                accept="image/*,application/pdf,.doc,.docx,.txt,.png,.svg,.jpg,.jpeg"
-              />
+              <PaperClipIcon className="h-5 w-5 text-gray-700" />
+            </button>
 
-              {/* Text input */}
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                className="text-gray-900 text-sm flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                placeholder="Chat with me..."
-              />
+            {/* Send button */}
+            <button
+              onClick={handleSendMessage}
+              className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition flex items-center"
+            >
+              <PaperAirplaneIcon className="h-5 w-5 mr-2" />
+              Send
+            </button>
 
-              {/* File upload button */}
-              <button
-                onClick={triggerFileInput}
-                className="bg-gray-200 p-3 rounded-lg hover:bg-gray-300 transition"
-              >
-                <PaperClipIcon className="h-5 w-5 text-gray-700" />
-              </button>
-
-              {/* Send button */}
-              <button
-                onClick={handleSendMessage}
-                className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition flex items-center"
-              >
-                <PaperAirplaneIcon className="h-5 w-5 mr-2" />
-                Send
-              </button>
-            </motion.div>
-          
+            {/* Clear Chat button */}
+            <button
+              onClick={handleClearChat}
+              className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition flex items-center"
+            >
+              <TrashIcon className="h-5 w-5 mr-2" />
+              Clear Chat
+            </button>
+          </motion.div>
         </div>
 
         {/* Copyright */}

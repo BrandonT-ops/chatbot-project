@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('OpenAI API Error:', error);
     return NextResponse.json(
-      { error: 'Failed to process chat' }, 
+      { error: 'Failed to process chat' },
       { status: 500 }
     );
   }
