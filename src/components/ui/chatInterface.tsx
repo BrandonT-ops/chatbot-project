@@ -353,7 +353,7 @@ const ChatInterface: React.FC = () => {
               writeNothing()
             ) : (
               <>
-          <div className="flex items-center space-x-2 px-12">
+          <div className="flex items-center space-x-2 ">
             {/* Hidden file input */}
             <input
               type="file"
@@ -361,7 +361,7 @@ const ChatInterface: React.FC = () => {
               multiple
               onChange={handleFileUpload}
               className="hidden"
-              accept="image/*,application/pdf,.doc,.docx,.txt"
+              accept="image/*,application/pdf,.doc,.docx,.txt,.png,.svg,.jpg,.jpeg"
             />
 
             {/* Text input */}
@@ -369,7 +369,7 @@ const ChatInterface: React.FC = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
               className="text-gray-900 text-sm flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
               placeholder="Chat with me..."
             />

@@ -37,67 +37,70 @@ const Header = () => {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     const trimmedTerm = searchTerm.trim();
-  
+
     if (!trimmedTerm) {
       setSearchResults(null);
       return;
     }
-  
+
     // Set loading state before fetching
     setSearchResults({
       query: trimmedTerm,
       results: [],
-      isLoading: true // Add loading state
+      isLoading: true, // Add loading state
     });
-  
+
     try {
       const response = await fetch(
-        `https://maguida.raia.cm/shop/search/?query=${encodeURIComponent(trimmedTerm)}`
+        `https://maguida.raia.cm/shop/search/?query=${encodeURIComponent(
+          trimmedTerm
+        )}`
       );
-  
+
       if (!response.ok) {
-        throw new Error(`Search request failed with status: ${response.status}`);
+        throw new Error(
+          `Search request failed with status: ${response.status}`
+        );
       }
-  
+
       const data = await response.json();
-    
+
       // Check if the response is an array
       if (Array.isArray(data) && data.length > 0) {
         setSearchResults({
           query: trimmedTerm,
           results: data,
-          isLoading: false // Remove loading state
+          isLoading: false, // Remove loading state
         });
       } else {
         setSearchResults({
           query: trimmedTerm,
           results: [],
-          isLoading: false // Remove loading state
+          isLoading: false, // Remove loading state
         });
       }
     } catch (error) {
       console.error("Search error:", error);
-  
+
       // Handle error state
       setSearchResults({
         query: trimmedTerm,
         results: [],
-        isLoading: false // Remove loading state
+        isLoading: false, // Remove loading state
       });
     }
   };
-  
-  
-  
+
   return (
     <Disclosure
       as="nav"
       className="bg-white border-b-2 border-gray-200 fixed top-0 w-full z-50"
     >
-      <div className="mx-auto max-w- px-2 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-full px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
+
           <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
             {/* Mobile menu button*/}
             <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
@@ -127,7 +130,7 @@ const Header = () => {
               <span className="ml-2 text-gray-900 font-semibold">Maguida</span>
             </div>
             <div className="hidden sm:ml-6 sm:block">
-              <div className="flex space-x-4">
+              <div className="flex space-x-2">
                 {/* {navigation.map((item) => (
                   <a
                     key={item.name}
@@ -146,7 +149,7 @@ const Header = () => {
           </div>
 
           {/* Search Bar */}
-          <div className=" items-center mr-4 lg:block hidden">
+          <div className=" items-center mr-4 lg:block hidden max-w-3xl">
             <form onSubmit={handleSearch} className="relative ">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <MagnifyingGlassIcon className="size-5 text-gray-900" />
@@ -162,7 +165,7 @@ const Header = () => {
                     setSearchResults(null);
                   }
                 }}
-                className=" placeholder:text-sm bg-[#F0F2F5] text-gray-900 pl-10 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-300 w-full sm:w-64"
+                className=" placeholder:text-sm bg-[#F0F2F5] text-gray-900 pl-10 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 w-full sm:w-96"
               />
             </form>
           </div>
@@ -235,6 +238,7 @@ const Header = () => {
               </MenuItems>
             </Menu>
           </div>
+
         </div>
       </div>
 
