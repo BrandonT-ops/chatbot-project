@@ -7,7 +7,7 @@ export type MessageType = {
   content?: string;
   images?: string[];
   files?: FileMetadata[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export type FileMetadata = {
