@@ -90,7 +90,7 @@ const Header = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="flex items-center mr-4 lg:block hidden">
+          <div className=" items-center mr-4 lg:block hidden">
             <form onSubmit={handleSearch} className="relative ">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <MagnifyingGlassIcon className="size-5 text-gray-900" />
