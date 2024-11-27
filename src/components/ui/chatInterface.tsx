@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useChatStore, MessageType, FileMetadata } from "@/lib/store";
 import {
   PaperAirplaneIcon,
@@ -11,6 +11,17 @@ import {
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { motion } from "framer-motion";
+
+
+// Define API response type
+interface APIResponse {
+  message?: {
+    content: string;
+    images?: string[];
+    metadata?: Record<string, unknown>;
+  };
+  error?: string;
+}
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState("");
@@ -30,10 +41,33 @@ const ChatInterface: React.FC = () => {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
-    setPendingFiles((prev) => [...prev, ...files]);
+    
+    // Validate file types and sizes
+    const validFiles = files.filter(file => {
+      const allowedTypes = [
+        'image/jpeg', 'image/png', 'image/svg+xml', 
+        'application/pdf', 'text/plain', 
+        'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      
+      if (!allowedTypes.includes(file.type)) {
+        setError(`Unsupported file type: ${file.name}`);
+        return false;
+      }
+      
+      if (file.size > maxSize) {
+        setError(`File too large: ${file.name} (max 5MB)`);
+        return false;
+      }
+      
+      return true;
+    });
+
+    setPendingFiles((prev) => [...prev, ...validFiles]);
   };
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (!input.trim() && pendingFiles.length === 0) return;
 
     // Prepare file metadata
@@ -53,56 +87,60 @@ const ChatInterface: React.FC = () => {
     };
 
     addMessage(userMessage);
-
     setIsTyping(true);
     setError(null);
 
-    const sendMessageToAPI = async () => {
-      try {
-        // Send to Django backend
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          body: JSON.stringify({ messages }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          messages: [...messages, userMessage],
+          metadata: {
+            fileCount: pendingFiles.length,
+            inputLength: input.length
+          }
+        }),
+      });
 
-        const data = await response.json();
-
-        if (data.message) {
-          // Add AI response
-          const aiMessage: MessageType = {
-            role: "assistant",
-            content: data.message.content,
-            images: data.message.images || [],
-            metadata: data.message.metadata || {},
-          };
-
-          addMessage(aiMessage);
-        } else {
-          console.error("Invalid response structure:", data);
-          setError("Invalid response from the server.");
-        }
-
-        // Reset input and files
-        setInput("");
-        setPendingFiles([]);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-      } catch (error) {
-        console.error("Chat error:", error);
-        setError("Failed to process chat. Please try again.");
-      } finally {
-        setIsTyping(false);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
 
-    // Retry mechanism
-    await sendMessageToAPI();
-    if (error) {
-      await sendMessageToAPI();
+      const data: APIResponse = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (data.message) {
+        const aiMessage: MessageType = {
+          role: "assistant",
+          content: data.message.content,
+          images: data.message.images || [],
+          metadata: data.message.metadata || {},
+        };
+
+        addMessage(aiMessage);
+      }
+
+      // Reset input and files
+      setInput("");
+      setPendingFiles([]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (error) {
+      console.error("Chat error:", error);
+      setError(
+        error instanceof Error 
+          ? error.message 
+          : "An unexpected error occurred. Please try again."
+      );
+    } finally {
+      setIsTyping(false);
     }
-  };
+  }, [input, pendingFiles, messages, addMessage]);
 
   const renderMessageContent = (msg: MessageType) => {
     return (
