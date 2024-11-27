@@ -22,9 +22,9 @@ import { useChatStore } from "@/lib/store";
 
 const navigation = [
   { name: "Dashboard", href: "#", current: true },
-  { name: "Team", href: "#", current: false },
-  { name: "Projects", href: "#", current: false },
-  { name: "Calendar", href: "#", current: false },
+  { name: "Products", href: "#", current: false },
+  { name: "Recommendations", href: "#", current: false },
+  { name: "Cart", href: "#", current: false },
 ];
 
 function classNames(...classes: string[]) {
@@ -149,7 +149,7 @@ const Header = () => {
           </div>
 
           {/* Search Bar */}
-          <div className=" items-center mr-4 lg:block hidden max-w-3xl">
+          <div className=" items-center mr-4 md:block hidden max-w-3xl">
             <form onSubmit={handleSearch} className="relative ">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <MagnifyingGlassIcon className="size-5 text-gray-900" />
