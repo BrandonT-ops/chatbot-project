@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Chemin du projet
-PROJECT_DIR="/var/www/maguida_frontend/"
+PROJECT_DIR="/var/www/maguida_frontend"
 BRANCH="main"  # Changez si nécessaire
 
 # Étape 1 : Aller dans le répertoire du projet
