@@ -155,14 +155,13 @@ const Header = () => {
     }
   };
 
-  
-
   // Initialize Google Login
   useEffect(() => {
     // Add a type check to handle potential undefined state
-    if (typeof window !== 'undefined' && window.google?.accounts) {
+    if (typeof window !== "undefined" && window.google?.accounts) {
       window.google.accounts.id.initialize({
-        client_id: "508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com",
+        client_id:
+          "508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com",
         callback: handleCredentialResponse,
       });
     }
@@ -172,7 +171,7 @@ const Header = () => {
     setIsLoggedIn(false);
     setUserProfile({});
     // Safely call disableAutoSelect if google is available
-    if (typeof window !== 'undefined' && window.google?.accounts) {
+    if (typeof window !== "undefined" && window.google?.accounts) {
       window.google.accounts.id.disableAutoSelect();
     }
   };
@@ -240,7 +239,7 @@ const Header = () => {
                       setSearchResults(null);
                     }
                   }}
-                  className=" placeholder:text-sm bg-[#F0F2F5] text-gray-900 pl-10 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 w-full sm:w-96"
+                  className=" placeholder:text-sm bg-[#F0F2F5] text-gray-900 pl-10 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 w-64 lg:w-96"
                 />
               </form>
             </div>
@@ -284,7 +283,7 @@ const Header = () => {
                       transition
                       className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-100 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
                     >
-                      <MenuItem>
+                      {/* <MenuItem>
                         <a
                           href="#"
                           className="block px-4 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
@@ -299,7 +298,7 @@ const Header = () => {
                         >
                           Settings
                         </a>
-                      </MenuItem>
+                      </MenuItem> */}
                       <MenuItem>
                         <button
                           onClick={handleSignOut}
@@ -315,11 +314,11 @@ const Header = () => {
                 <div
                   id="g_id_onload"
                   data-client_id="508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com"
-                  data-login_uri="https://maguida.raia.cm/auth/login"
+                  data-login_uri="https://maguida.raia.cm/auth/login/"
                   data-auto_prompt="false"
                 >
                   <div
-                    className="g_id_signin"
+                    className="g_id_signin block w-full sm:w-auto sm:h-auto sm:overflow-visible sm:text-base w-12 h-12 overflow-hidden text-transparent"
                     data-type="standard"
                     data-size="large"
                     data-theme="outline"
