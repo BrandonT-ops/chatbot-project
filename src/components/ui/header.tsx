@@ -20,6 +20,7 @@ import {
 import Image from "next/image";
 import { useChatStore } from "@/lib/store";
 import Script from "next/script";
+import { useRouter } from 'next/navigation';
 
 declare global {
   interface Window {
@@ -59,6 +60,7 @@ const Header = () => {
     email?: string;
     picture?: string;
   }>({});
+  const router = useRouter();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +78,8 @@ const Header = () => {
       results: [],
       isLoading: true, // Add loading state
     });
+
+    router.push('/search');
 
     try {
       const response = await fetch(
@@ -223,8 +227,8 @@ const Header = () => {
             </div>
 
             {/* Search Bar */}
-            <div className=" items-center mr-4 md:block hidden max-w-3xl">
-              <form onSubmit={handleSearch} className="relative ">
+            <div className="items-center mr-4 md:block hidden max-w-3xl">
+              <form onSubmit={handleSearch} className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <MagnifyingGlassIcon className="size-5 text-gray-900" />
                 </div>
@@ -234,12 +238,13 @@ const Header = () => {
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
+
                     // If input is emptied, reset search results
                     if (!e.target.value.trim()) {
                       setSearchResults(null);
                     }
                   }}
-                  className=" placeholder:text-sm bg-[#F0F2F5] text-gray-900 pl-10 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 w-64 lg:w-96"
+                  className="placeholder:text-sm bg-[#F0F2F5] text-gray-900 pl-10 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 w-64 lg:w-96"
                 />
               </form>
             </div>
@@ -283,22 +288,6 @@ const Header = () => {
                       transition
                       className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-100 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
                     >
-                      {/* <MenuItem>
-                        <a
-                          href="#"
-                          className="block px-4 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
-                        >
-                          Your Profile
-                        </a>
-                      </MenuItem>
-                      <MenuItem>
-                        <a
-                          href="#"
-                          className="block px-4 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
-                        >
-                          Settings
-                        </a>
-                      </MenuItem> */}
                       <MenuItem>
                         <button
                           onClick={handleSignOut}

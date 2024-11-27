@@ -10,14 +10,14 @@ import {
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import SearchResults from "@/app/search/page";
+//import SearchResults from "@/app/search/page";
 // import Link from "next/link";
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState("");
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { messages, addMessage, searchResults } = useChatStore();
+  const { messages, addMessage } = useChatStore();
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
@@ -229,10 +229,10 @@ const ChatInterface: React.FC = () => {
   //   );
   // };
 
-  const writeNothing = () => {
-    if (!searchResults) return null;
-    return <div></div>;
-  };
+  // const writeNothing = () => {
+  //   if (!searchResults) return null;
+  //   return <div></div>;
+  // };
 
   return (
     <motion.div
@@ -251,17 +251,11 @@ const ChatInterface: React.FC = () => {
             transition={{ duration: 0.5 }}
             className="text-3xl font-bold text-gray-800 mb-6"
           >
-            {searchResults
-              ? `Search Results for "${searchResults.query}"`
-              : "Need help finding a product?"}
+            Need help finding a product?
           </motion.h1>
 
           {/* Chat Messages Container */}
           <div className="flex-grow overflow-y-auto mb-6 space-y-4">
-            {searchResults ? (
-             <SearchResults />
-            ) : (
-              <>
                 {/* Default AI Initial Message */}
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
@@ -346,8 +340,6 @@ const ChatInterface: React.FC = () => {
                     )}
                   </motion.div>
                 ))}
-              </>
-            )}
           </div>
 
           {/* File Preview */}
@@ -387,9 +379,7 @@ const ChatInterface: React.FC = () => {
           )}
 
           {/* Input Section */}
-          {searchResults ? (
-            writeNothing()
-          ) : (
+          
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -433,7 +423,7 @@ const ChatInterface: React.FC = () => {
                 Send
               </button>
             </motion.div>
-          )}
+          
         </div>
 
         {/* Copyright */}
