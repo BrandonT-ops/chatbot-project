@@ -16,6 +16,7 @@ const ChatInterface: React.FC = () => {
   const [input, setInput] = useState("");
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { messages, addMessage, clearMessages } = useChatStore();
 
@@ -54,41 +55,52 @@ const ChatInterface: React.FC = () => {
     addMessage(userMessage);
 
     setIsTyping(true);
+    setError(null);
 
-    try {
-      // Send to Django backend
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        body: JSON.stringify({ messages }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+    const sendMessageToAPI = async () => {
+      try {
+        // Send to Django backend
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          body: JSON.stringify({ messages }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.message) {
-        // Add AI response
-        const aiMessage: MessageType = {
-          role: "assistant",
-          content: data.message.content,
-          images: data.message.images || [],
-          metadata: data.message.metadata || {},
-        };
+        if (data.message) {
+          // Add AI response
+          const aiMessage: MessageType = {
+            role: "assistant",
+            content: data.message.content,
+            images: data.message.images || [],
+            metadata: data.message.metadata || {},
+          };
 
-        addMessage(aiMessage);
-      } else {
-        console.error("Invalid response structure:", data);
+          addMessage(aiMessage);
+        } else {
+          console.error("Invalid response structure:", data);
+          setError("Invalid response from the server.");
+        }
+
+        // Reset input and files
+        setInput("");
+        setPendingFiles([]);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      } catch (error) {
+        console.error("Chat error:", error);
+        setError("Failed to process chat. Please try again.");
+      } finally {
+        setIsTyping(false);
       }
+    };
 
-      // Reset input and files
-      setInput("");
-      setPendingFiles([]);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (error) {
-      console.error("Chat error:", error);
-    } finally {
-      setIsTyping(false);
+    // Retry mechanism
+    await sendMessageToAPI();
+    if (error) {
+      await sendMessageToAPI();
     }
   };
 
@@ -154,7 +166,7 @@ const ChatInterface: React.FC = () => {
     >
       <div className="w-full max-w-5xl mx-auto flex-grow flex flex-col mt-8">
         {/* Container with centered content */}
-        <div className="flex-grow bg-white rounded-lg p-6">
+        <div className="flex-grow bg-white rounded-lg p-6 flex flex-col">
           {/* Title */}
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
@@ -166,7 +178,7 @@ const ChatInterface: React.FC = () => {
           </motion.h1>
 
           {/* Chat Messages Container */}
-          <div className="flex-grow overflow-y-auto mb-6 space-y-4">
+          <div className="flex-grow overflow-y-auto mb-6 space-y-4 p-4 bg-white rounded-lg">
             {/* Default AI Initial Message */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -289,6 +301,13 @@ const ChatInterface: React.FC = () => {
                 </div>
               </motion.div>
             )}
+
+            {/* Error Message */}
+            {error && (
+              <div className="text-red-500 text-sm text-center">
+                {error}
+              </div>
+            )}
           </div>
 
           {/* File Preview */}
@@ -362,6 +381,15 @@ const ChatInterface: React.FC = () => {
               <PaperClipIcon className="h-5 w-5 text-gray-700" />
             </button>
 
+             {/* Clear Chat button */}
+             <button
+              onClick={handleClearChat}
+              className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition flex items-center"
+            >
+              <TrashIcon className="h-5 w-5 " />
+              
+            </button>
+
             {/* Send button */}
             <button
               onClick={handleSendMessage}
@@ -371,14 +399,7 @@ const ChatInterface: React.FC = () => {
               Send
             </button>
 
-            {/* Clear Chat button */}
-            <button
-              onClick={handleClearChat}
-              className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition flex items-center"
-            >
-              <TrashIcon className="h-5 w-5 mr-2" />
-              Clear Chat
-            </button>
+           
           </motion.div>
         </div>
 
