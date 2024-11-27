@@ -168,6 +168,15 @@ const Header = () => {
           "508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com",
         callback: handleCredentialResponse,
       });
+
+      // Render the Google Sign-In button
+      const buttonElement = document.getElementById("g_id_onload");
+      if (buttonElement) {
+        window.google.accounts.id.renderButton(
+          buttonElement,
+          { theme: "outline", size: "large" }
+        );
+      }
     }
   }, []);
 
@@ -242,6 +251,11 @@ const Header = () => {
                     // If input is emptied, reset search results
                     if (!e.target.value.trim()) {
                       setSearchResults(null);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearch(e);
                     }
                   }}
                   className="placeholder:text-sm bg-[#F0F2F5] text-gray-900 pl-10 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 w-64 lg:w-96"

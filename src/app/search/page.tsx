@@ -22,7 +22,7 @@ const SearchResults = () => {
 
   if (searchResults.isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white p-6">
+      <div className="min-h-screen bg-white p-6">
         <div className="container mx-auto">
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
