@@ -74,19 +74,53 @@ const ChatInterface: React.FC = () => {
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`flex ${
-                  msg.role === "user" ? "justify-end" : "justify-start"
+                className={`flex  ${
+                  msg.role === "user" ? "justify-start" : "justify-start"
                 }`}
               >
-                <div
-                  className={`max-w-[80%] p-3 rounded-lg ${
-                    msg.role === "user"
-                      ? "bg-blue-100 text-right"
-                      : "bg-gray-100 text-left"
-                  }`}
-                >
-                  {msg.content}
-                </div>
+                {msg.role === "user" ? (
+                  // User message
+                  <div className="flex items-start space-x-3 my-3">
+                    <Image
+                      width={100}
+                      height={100}
+                      alt="Pp"
+                      src="assets/profile_picture.svg"
+                      className="size-8 rounded-full"
+                    />
+                    <div className="bg-white px-1 rounded-lg flex-grow">
+                      <div className="flex items-center mb-2">
+                        <span className="font-semibold text-gray-800 mr-2">
+                          User
+                        </span>
+                      </div>
+                      <p className="text-gray-600 text-sm text-justify">
+                        {msg.content}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  // AI message
+                  <div className="flex items-start space-x-3">
+                    <Image
+                      width={100}
+                      height={100}
+                      alt="Maguida Chat Icon"
+                      src="assets/chat_icon.svg"
+                      className="size-8 rounded-full"
+                    />
+                    <div className="bg-white px-1 rounded-lg flex-grow">
+                      <div className="flex items-center mb-2">
+                        <span className="font-semibold text-gray-800 mr-2">
+                          Maguida
+                        </span>
+                      </div>
+                      <p className="text-gray-600 text-sm text-justify">
+                        {msg.content}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
