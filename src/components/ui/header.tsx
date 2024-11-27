@@ -66,6 +66,7 @@ const Header = () => {
       }
 
       const data = await response.json();
+      console.log(data);
 
       // Check if the response is an array
       if (Array.isArray(data) && data.length > 0) {

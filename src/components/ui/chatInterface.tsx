@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState("");
@@ -195,26 +196,28 @@ const ChatInterface: React.FC = () => {
                     unoptimized
                   />
                   <div className="mt-2">
-                    <h3 className="font-semibold text-gray-800">{product.name}</h3>
+                    <h3 className="font-semibold text-gray-800">
+                      {product.name}
+                    </h3>
                     <p className="text-gray-600">{product.price} FCFA</p>
-                    <p className={`text-sm ${
-                      product.disponibilite === 'Out of Stock !'
-                        ? 'text-red-500'
-                        : 'text-green-500'
-                    }`}>
+                    <p
+                      className={`text-sm ${
+                        product.disponibilite === "Out of Stock !"
+                          ? "text-red-500"
+                          : "text-green-500"
+                      }`}
+                    >
                       {product.disponibilite}
                     </p>
-                    <button
-                      className="mt-2 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
-                      onClick={() => {
-                        addMessage({
-                          role: 'assistant',
-                          content: `Details for ${product.name}:\n\nPrice: ${product.price} FCFA\nAvailability: ${product.disponibilite}\nCategory: ${product.categorie}\n\nFull details: ${product.url}`,
-                        });
-                      }}
-                    >
-                      View Details
-                    </button>
+                    <Link href={product.url} passHref>
+                      <a
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition inline-block text-center"
+                      >
+                        View Details
+                      </a>
+                    </Link>
                   </div>
                 </motion.div>
               ))}
@@ -227,10 +230,8 @@ const ChatInterface: React.FC = () => {
 
   const writeNothing = () => {
     if (!searchResults) return null;
-    return (
-      <div></div>
-    );
-  }
+    return <div></div>;
+  };
 
   return (
     <motion.div
@@ -251,8 +252,7 @@ const ChatInterface: React.FC = () => {
           >
             {searchResults
               ? `Search Results for "${searchResults.query}"`
-              : "Need help finding a product?"
-            }
+              : "Need help finding a product?"}
           </motion.h1>
 
           {/* Chat Messages Container */}
@@ -282,9 +282,9 @@ const ChatInterface: React.FC = () => {
                       </span>
                     </div>
                     <p className="text-gray-600 text-sm text-justify max-w-4xl">
-                      Hi there! I&apos;m Maguida, your personal shopping assistant.
-                      I can help you find the perfect product! Just tell me what
-                      you&apos;re looking for.
+                      Hi there! I&apos;m Maguida, your personal shopping
+                      assistant. I can help you find the perfect product! Just
+                      tell me what you&apos;re looking for.
                     </p>
                   </div>
                 </motion.div>
@@ -437,7 +437,8 @@ const ChatInterface: React.FC = () => {
 
         {/* Copyright */}
         <div className="text-center text-gray-500 py-4 mt-4">
-          © {new Date().getFullYear()} Richenel&apos;s AI Agency. All rights reserved
+          © {new Date().getFullYear()} Richenel&apos;s AI Agency. All rights
+          reserved
         </div>
       </div>
     </motion.div>
