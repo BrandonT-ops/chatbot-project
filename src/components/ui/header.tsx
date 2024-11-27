@@ -45,7 +45,7 @@ const Header = () => {
       return;
     }
   
-    // Set loading state before fetch
+    // Set loading state before fetching
     setSearchResults({
       query: trimmedTerm,
       results: [],
