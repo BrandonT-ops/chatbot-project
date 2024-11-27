@@ -127,6 +127,33 @@ const ChatInterface: React.FC = () => {
 
   const renderSearchResults = () => {
     if (!searchResults) return null;
+
+    if (searchResults.isLoading) {
+      return (
+        <div className="space-y-4">
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h2 className="text-lg font-semibold text-gray-800 mb-3">
+              Searching for {searchResults.query}...
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3, 4].map((_, index) => (
+                <div 
+                  key={index} 
+                  className="bg-white border rounded-lg p-4 shadow-sm animate-pulse"
+                >
+                  <div className="h-48 bg-gray-300 rounded-t-lg mb-4"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                    <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
   
     return (
       <div className="space-y-4">
@@ -188,7 +215,6 @@ const ChatInterface: React.FC = () => {
       <div></div>
     );
   }
-
 
   return (
     <div className="flex flex-col min-h-screen pt-16 bg-white">

@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 
-
 export type MessageType = {
   id?: string;
   role: 'user' | 'assistant';
@@ -29,6 +28,7 @@ export interface ProductSearchResult {
 export interface SearchResultType {
   query: string;
   results: ProductSearchResult[];
+  isLoading?: boolean; // Add loading state
 }
 
 interface ChatStore {
@@ -36,9 +36,11 @@ interface ChatStore {
   addMessage: (message: MessageType) => void;
   updateMessage: (id: string, updates: Partial<MessageType>) => void;
   clearMessages: () => void;
+  
+  // Separate search-related states
   searchResults: SearchResultType | null;
   setSearchResults: (results: SearchResultType | null) => void;
-
+  setSearchLoading: (isLoading: boolean) => void;
 }
 
 export const useChatStore = create<ChatStore>((set) => ({
@@ -52,6 +54,13 @@ export const useChatStore = create<ChatStore>((set) => ({
     )
   })),
   clearMessages: () => set({ messages: [] }),
+  
+  // Updated search-related methods
   searchResults: null,
   setSearchResults: (results) => set({ searchResults: results }),
+  setSearchLoading: (isLoading) => set((state) => ({
+    searchResults: state.searchResults 
+      ? { ...state.searchResults, isLoading } 
+      : { query: '', results: [], isLoading }
+  })),
 }));

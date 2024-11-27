@@ -41,9 +41,16 @@ const Header = () => {
     const trimmedTerm = searchTerm.trim();
   
     if (!trimmedTerm) {
-      setSearchResults(null); // Reset search if input is empty
+      setSearchResults(null);
       return;
     }
+  
+    // Set loading state before fetch
+    setSearchResults({
+      query: trimmedTerm,
+      results: [],
+      isLoading: true // Add loading state
+    });
   
     try {
       const response = await fetch(
@@ -60,12 +67,14 @@ const Header = () => {
       if (Array.isArray(data) && data.length > 0) {
         setSearchResults({
           query: trimmedTerm,
-          results: data, // Use the array directly
+          results: data,
+          isLoading: false // Remove loading state
         });
       } else {
         setSearchResults({
           query: trimmedTerm,
-          results: [], // No results found
+          results: [],
+          isLoading: false // Remove loading state
         });
       }
     } catch (error) {
@@ -74,7 +83,8 @@ const Header = () => {
       // Handle error state
       setSearchResults({
         query: trimmedTerm,
-        results: [], // Empty results on error
+        results: [],
+        isLoading: false // Remove loading state
       });
     }
   };
