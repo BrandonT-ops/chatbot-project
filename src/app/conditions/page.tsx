@@ -46,18 +46,21 @@ const ConditionsPage = () => {
           </a>
           .
         </p>
+        <p className='text-gray-700 leading-relaxed'>
+        En utilisant Maguida, vous acceptez les présentes Conditions d&apos;utilisation. Veuillez les lire attentivement avant d&apos;accéder ou d&apos;utiliser notre service.
+        </p>
       </section>
 
       {/* Section 2: Utilisation des données */}
       <section>
         <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-          2. Utilisation des données
+          2. Définition des termes
         </h2>
         <ul className="list-disc space-y-3 text-gray-700 pl-5">
           <li>Améliorer le service : analyser les requêtes pour rendre les résultats plus pertinents.</li>
           <li>Maintenir et sécuriser la plateforme : détecter et prévenir les activités frauduleuses ou non autorisées.</li>
           <li>Communication : répondre à vos demandes ou signalements.</li>
-          <li>Analyse statistique : comprendre les tendances d’utilisation pour optimiser notre service.</li>
+          <li>Analyse statistique : comprendre les tendances d&apos;utilisation pour optimiser notre service.</li>
         </ul>
       </section>
 

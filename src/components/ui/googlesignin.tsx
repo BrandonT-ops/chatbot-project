@@ -1,6 +1,7 @@
 "use client"
 import { useEffect } from "react";
 
+
 const GoogleSignIn: React.FC = () => {
   useEffect(() => {
     // Charger le script Google
