@@ -40,6 +40,15 @@ declare global {
   }
 }
 
+// Define the OAuth configuration
+const OAUTH_CONFIG = {
+  CLIENT_ID: "508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com",
+  REDIRECT_URI: "https://maguida.cm",
+  SCOPE: "openid email profile",
+  AUTHORIZATION_ENDPOINT: "https://accounts.google.com/o/oauth2/v2/auth",
+  TOKEN_ENDPOINT: "https://maguida.raia.cm/auth/google/login/"
+};
+
 const navigation = [
   { name: "Dashboard", href: "#", current: true },
   { name: "Products", href: "#", current: false },
@@ -61,43 +70,173 @@ const Header = () => {
     picture?: string;
   }>({});
   const router = useRouter();
-  const [showModal, setShowModal] = useState(false); // Modal visibility state
+  const [showModal, setShowModal] = useState(false);
+  const [isTermsChecked, setIsTermsChecked] = useState(false);
+
+
+  // const initiateOAuthFlow = () => {
+  //   const authUrl = new URL(OAUTH_CONFIG.AUTHORIZATION_ENDPOINT);
+  //   authUrl.searchParams.set('client_id', OAUTH_CONFIG.CLIENT_ID);
+  //   authUrl.searchParams.set('redirect_uri', OAUTH_CONFIG.REDIRECT_URI);
+  //   authUrl.searchParams.set('response_type', 'code');
+  //   authUrl.searchParams.set('scope', OAUTH_CONFIG.SCOPE);
+  //   authUrl.searchParams.set('access_type', 'offline');
+  //   authUrl.searchParams.set('prompt', 'consent');
+
+  //   // Redirect to Google OAuth consent screen
+  //   window.location.href = authUrl.toString();
+  // };
+
+  // OAuth configuration
+
+
+
+  // New function to handle OAuth code exchange
+  const exchangeAuthorizationCode = async (code: string) => {
+    try {
+      const response = await fetch(OAUTH_CONFIG.TOKEN_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ code })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to exchange authorization code');
+      }
+
+      const data = await response.json();
+      
+      // Assuming the response contains user profile information
+      setUserProfile({
+        name: data.name,
+        email: data.email,
+        picture: data.picture
+      });
+      setIsLoggedIn(true);
+
+      // Optional: Redirect to a default page after successful login
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('OAuth login error:', error);
+      alert('Login failed');
+    }
+  };
+
+    // Check for authorization code on component mount
+    useEffect(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const authCode = urlParams.get('code');
+  
+      if (authCode) {
+        // Remove the code from the URL to prevent repeated exchanges
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Exchange the authorization code
+        exchangeAuthorizationCode(authCode);
+      }
+    }, []);
+
+     // Combine OAuth flow into the existing login process
+  const triggerGoogleLogin = () => {
+    const authUrl = new URL(OAUTH_CONFIG.AUTHORIZATION_ENDPOINT);
+    authUrl.searchParams.set('client_id', OAUTH_CONFIG.CLIENT_ID);
+    authUrl.searchParams.set('redirect_uri', OAUTH_CONFIG.REDIRECT_URI);
+    authUrl.searchParams.set('response_type', 'code');
+    authUrl.searchParams.set('scope', OAUTH_CONFIG.SCOPE);
+    authUrl.searchParams.set('access_type', 'offline');
+    authUrl.searchParams.set('prompt', 'consent');
+
+    // Redirect to Google OAuth consent screen
+    window.location.href = authUrl.toString();
+  };
+
+  // Check for authorization code on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const authCode = urlParams.get('code');
+
+    if (authCode) {
+      // Remove the code from the URL to prevent repeated exchanges
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Exchange the authorization code
+      const exchangeAuthorizationCode = async () => {
+        try {
+          const response = await fetch(OAUTH_CONFIG.TOKEN_ENDPOINT, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ code: authCode })
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to exchange authorization code');
+          }
+
+          const data = await response.json();
+          
+          // Assuming the response contains user profile information
+          setUserProfile({
+            name: data.name,
+            email: data.email,
+            picture: data.picture
+          });
+          setIsLoggedIn(true);
+
+          // Optional: Redirect to a default page after successful login
+          router.push('/chat');
+        } catch (error) {
+          console.error('OAuth login error:', error);
+          alert('Login failed');
+        }
+      };
+
+      exchangeAuthorizationCode();
+    }
+  }, []);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     const trimmedTerm = searchTerm.trim();
-
+  
     if (!trimmedTerm) {
       setSearchResults(null);
       return;
     }
-
+  
     // Set loading state before fetching
     setSearchResults({
       query: trimmedTerm,
       results: [],
       isLoading: true, // Add loading state
     });
+  
+    // Navigate to the search page with the search term as a query parameter
+    router.push(`/search?term=${encodeURIComponent(trimmedTerm)}`);
 
-    router.push('/search');
-
+  
     try {
       const response = await fetch(
         `https://maguida.raia.cm/shop/search/?query=${encodeURIComponent(
           trimmedTerm
         )}`
       );
-
+  
       if (!response.ok) {
         throw new Error(
           `Search request failed with status: ${response.status}`
         );
       }
-
+  
       const data = await response.json();
       console.log(data);
-
+  
       // Check if the response is an array
       if (Array.isArray(data) && data.length > 0) {
         setSearchResults({
@@ -114,7 +253,7 @@ const Header = () => {
       }
     } catch (error) {
       console.error("Search error:", error);
-
+  
       // Handle error state
       setSearchResults({
         query: trimmedTerm,
@@ -123,6 +262,7 @@ const Header = () => {
       });
     }
   };
+  
 
   const handleCredentialResponse = async (response: { credential: string }) => {
     try {
@@ -140,11 +280,11 @@ const Header = () => {
       const res = await fetch("https://maguida.raia.cm/auth/google/login/", {
         method: "POST",
         headers: {
-         // Accept: "application/json",
-          "Content-Type": "text/plain", // Specify plain text
+          "Content-Type": "application/json", // Specify JSON
         },
-        body: response.credential, // Send the token directly as a string
+        body: JSON.stringify({ token: response.credential }) // Wrap the token in a JSON object
       });
+      
 
       if (res.ok) {
         const data = await res.json();
@@ -175,13 +315,13 @@ const Header = () => {
   //   setShowModal(true);
   // };
 
-  const handleAcceptTerms = () => {
-    setShowModal(false); // Close the modal
-    // Logic to proceed with Google login
-    if (typeof window !== "undefined" && window.google?.accounts) {
-      window.google.accounts.id.prompt(); // Trigger Google login prompt
-    }
-  };
+  // const handleAcceptTerms = () => {
+  //   setShowModal(false); // Close the modal
+  //   // Logic to proceed with Google login
+  //   if (typeof window !== "undefined" && window.google?.accounts) {
+  //     window.google.accounts.id.prompt(); // Trigger Google login prompt
+  //   }
+  // };
 
   // Initialize Google Login
   useEffect(() => {
@@ -384,31 +524,88 @@ const Header = () => {
 
       {/* Modal for accepting terms */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md">
-            <h2 className="text-xl font-bold mb-4">Accept Terms & Privacy Policy</h2>
-            <p className="mb-4">
-              By logging in, you agree to our{" "}
-              <a href="/terms" className="text-blue-500 underline">
-                Terms of Use
-              </a>{" "}
-              and{" "}
-              <a href="/privacy" className="text-blue-500 underline">
-                Privacy Policy
-              </a>.
-            </p>
-            <div className="flex justify-end">
-              <button
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-md mx-4 rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+            {/* Header */}
+            <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-6 w-6 mr-2 text-blue-600" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
+                />
+              </svg>
+              <h2 className="text-xl font-bold text-gray-800">
+                Terms & Privacy
+              </h2>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Before you continue, please review and accept our{" "}
+                <a 
+                  href="/terms" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-blue-600 hover:underline font-semibold"
+                >
+                  Terms of Use
+                </a>{" "}
+                and{" "}
+                <a 
+                  href="/privacy" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-blue-600 hover:underline font-semibold"
+                >
+                  Privacy Policy
+                </a>.
+              </p>
+
+              <div className="flex items-center">
+                <input 
+                  type="checkbox" 
+                  id="terms-checkbox"
+                  checked={isTermsChecked}
+                  onChange={() => setIsTermsChecked(!isTermsChecked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label 
+                  htmlFor="terms-checkbox" 
+                  className="ml-2 block text-sm text-gray-900"
+                >
+                  I have read and agree to the Terms and Privacy Policy
+                </label>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+              <button 
                 onClick={() => setShowModal(false)}
-                className="mr-2 bg-gray-300 px-4 py-2 rounded"
+                className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
                 Cancel
               </button>
-              <button
-                onClick={handleAcceptTerms}
-                className="bg-blue-600 text-white px-4 py-2 rounded"
+              <button 
+                onClick={() => {
+                  if (isTermsChecked) {
+                    setShowModal(false);
+                    triggerGoogleLogin();
+                  }
+                }}
+                disabled={!isTermsChecked}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Accept and Login
+                Accept and Continue
               </button>
             </div>
           </div>
