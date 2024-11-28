@@ -31,7 +31,7 @@ const ConditionsPage = () => {
               https://maguida.cm
             </a>
             ), un moteur de recherche de produits en ligne basé sur
-            l’intelligence artificielle. Votre confidentialité est une priorité
+            l&apos;intelligence artificielle. Votre confidentialité est une priorité
             pour Richenel&apos;s AI Agency SARL, société immatriculée sous le
             numéro RCCM RC/YAO/2024/B/1323. Cette politique explique comment
             nous collectons, utilisons, protégeons et partageons vos
@@ -135,7 +135,7 @@ const ConditionsPage = () => {
               ceux de nos partenaires.
             </li>
             <li>
-              D’utiliser des moyens automatisés pour extraire des données ou
+              D&apos;utiliser des moyens automatisés pour extraire des données ou
               perturber le Service (exemple : robots, crawlers).
             </li>
             <li>
@@ -194,8 +194,8 @@ const ConditionsPage = () => {
           <ol className="list-disc space-y-2 text-gray-700 pl-5 mt-4">
             <li>
               L&apos;utilisation de vos données est régie par notre Politique de
-              Confidentialité, disponible à l&apos;adresse suivante : [Lien vers la
-              politique de confidentialité].
+              Confidentialité, disponible à l&apos;adresse suivante : 
+              <a href="/terms"> politique de confidentialité</a>
             </li>
             <li>
               Nous collectons des données telles que vos requêtes et
@@ -216,7 +216,7 @@ const ConditionsPage = () => {
           <ol className="list-disc space-y-2 text-gray-700 pl-5 mt-4">
             <li>
               Maguida est fourni &quot;tel quel&quot;. Nous ne garantissons pas que le
-              Service sera exempt d’erreurs ou d’interruptions.
+              Service sera exempt d&apos;erreurs ou d&apos;interruptions.
             </li>
             <li>
               Richenel&apos;s AI Agency ne peut être tenue responsable des pertes ou
