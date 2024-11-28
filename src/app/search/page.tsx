@@ -61,12 +61,13 @@ const SearchResults = () => {
             </button>
 
             {/* Search Results Label */}
-            <div className="text-lg font-semibold text-gray-700 bg-gray-100 px-4 py-2 rounded-full shadow-sm">
-              Search Results
-            </div>
+           
           </div>
         </div>
 
+        <div className="text-4xl font-semibold text-gray-700 py-2">
+              Search Results for &quot;{searchResults.query}&quot;
+          </div>
         {/* Search Info */}
         <div className="text-sm text-gray-600 mb-6">
           About {searchResults.results.length} results

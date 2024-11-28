@@ -386,70 +386,67 @@ const ChatInterface: React.FC = () => {
             </div>
           )}
 
-          {/* Input Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex items-center space-x-2"
-          >
-            {/* Hidden file input */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              multiple
-              onChange={handleFileUpload}
-              className="hidden"
-              accept="image/*,application/pdf,.doc,.docx,.txt,.png,.svg,.jpg,.jpeg"
-            />
-
-            {/* Text input */}
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-              className="text-gray-900 text-sm flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-              placeholder="Chat with me..."
-            />
-
-            {/* File upload button */}
-            <button
-              onClick={triggerFileInput}
-              className="bg-gray-200 p-3 rounded-lg hover:bg-gray-300 transition"
+          <div className="fixed bottom-0 left-0 w-full bg-white shadow-lg p-4 border-t">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex items-center space-x-2 max-w-3xl mx-auto"
             >
-              <PaperClipIcon className="h-5 w-5 text-gray-700" />
-            </button>
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+                accept="image/*,application/pdf,.doc,.docx,.txt,.png,.svg,.jpg,.jpeg"
+              />
 
-            {/* Clear Chat button */}
-            <button
-              onClick={handleClearChat}
-              className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition flex items-center"
-            >
-              <TrashIcon className="h-5 w-5 " />
-            </button>
+              {/* Text input */}
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                className="text-gray-900 text-sm flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                placeholder="Chat with me..."
+              />
 
-            {/* Send button */}
-            <button
-              onClick={handleSendMessage}
-              className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition flex items-center"
-            >
-              <PaperAirplaneIcon className="h-5 w-5 mr-2" />
-              Send
-            </button>
-          </motion.div>
-        </div>
+              {/* File upload button */}
+              <button
+                onClick={triggerFileInput}
+                className="bg-gray-200 p-3 rounded-lg hover:bg-gray-300 transition"
+              >
+                <PaperClipIcon className="h-5 w-5 text-gray-700" />
+              </button>
 
-        {/* Copyright */}
-        <div className="text-center text-gray-500 py-4 mt-4 text-xs">
-          © {new Date().getFullYear()} Richenel&apos;s AI Agency. All rights
-          reserved.{" "}
-          <Link
-            href="/terms"
-            className="text-blue-500 hover:underline"
-          >
-            Terms and Conditions
-          </Link>
+              {/* Clear Chat button */}
+              <button
+                onClick={handleClearChat}
+                className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition flex items-center"
+              >
+                <TrashIcon className="h-5 w-5" />
+              </button>
+
+              {/* Send button */}
+              <button
+                onClick={handleSendMessage}
+                className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition flex items-center"
+              >
+                <PaperAirplaneIcon className="h-5 w-5 mr-0 sm:mr-2" />
+                <span className="hidden sm:inline">Send</span>
+              </button>
+            </motion.div>
+            {/* Copyright */}
+            <div className="text-center text-gray-500 py-4 mt-4 text-xs">
+              © {new Date().getFullYear()} Richenel&apos;s AI Agency. All rights
+              reserved.{" "}
+              <Link href="/terms" className="text-blue-500 hover:underline">
+                Terms and Conditions
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>
