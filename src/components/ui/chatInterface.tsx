@@ -11,7 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { motion } from "framer-motion";
-
+import Link from "next/link";
 
 // Define API response type
 interface APIResponse {
@@ -41,26 +41,30 @@ const ChatInterface: React.FC = () => {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
-    
+
     // Validate file types and sizes
-    const validFiles = files.filter(file => {
+    const validFiles = files.filter((file) => {
       const allowedTypes = [
-        'image/jpeg', 'image/png', 'image/svg+xml', 
-        'application/pdf', 'text/plain', 
-        'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        "image/jpeg",
+        "image/png",
+        "image/svg+xml",
+        "application/pdf",
+        "text/plain",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       ];
       const maxSize = 5 * 1024 * 1024; // 5MB
-      
+
       if (!allowedTypes.includes(file.type)) {
         setError(`Unsupported file type: ${file.name}`);
         return false;
       }
-      
+
       if (file.size > maxSize) {
         setError(`File too large: ${file.name} (max 5MB)`);
         return false;
       }
-      
+
       return true;
     });
 
@@ -96,12 +100,12 @@ const ChatInterface: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           messages: [...messages, userMessage],
           metadata: {
             fileCount: pendingFiles.length,
-            inputLength: input.length
-          }
+            inputLength: input.length,
+          },
         }),
       });
 
@@ -133,8 +137,8 @@ const ChatInterface: React.FC = () => {
     } catch (error) {
       console.error("Chat error:", error);
       setError(
-        error instanceof Error 
-          ? error.message 
+        error instanceof Error
+          ? error.message
           : "An unexpected error occurred. Please try again."
       );
     } finally {
@@ -238,9 +242,9 @@ const ChatInterface: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-gray-600 text-sm text-justify max-w-4xl">
-                  Hi there! I&apos;m Maguida, your personal shopping
-                  assistant. I can help you find the perfect product! Just
-                  tell me what you&apos;re looking for.
+                  Hi there! I&apos;m Maguida, your personal shopping assistant.
+                  I can help you find the perfect product! Just tell me what
+                  you&apos;re looking for.
                 </p>
               </div>
             </motion.div>
@@ -342,9 +346,7 @@ const ChatInterface: React.FC = () => {
 
             {/* Error Message */}
             {error && (
-              <div className="text-red-500 text-sm text-center">
-                {error}
-              </div>
+              <div className="text-red-500 text-sm text-center">{error}</div>
             )}
           </div>
 
@@ -419,13 +421,12 @@ const ChatInterface: React.FC = () => {
               <PaperClipIcon className="h-5 w-5 text-gray-700" />
             </button>
 
-             {/* Clear Chat button */}
-             <button
+            {/* Clear Chat button */}
+            <button
               onClick={handleClearChat}
               className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition flex items-center"
             >
               <TrashIcon className="h-5 w-5 " />
-              
             </button>
 
             {/* Send button */}
@@ -436,15 +437,19 @@ const ChatInterface: React.FC = () => {
               <PaperAirplaneIcon className="h-5 w-5 mr-2" />
               Send
             </button>
-
-           
           </motion.div>
         </div>
 
         {/* Copyright */}
-        <div className="text-center text-gray-500 py-4 mt-4">
+        <div className="text-center text-gray-500 py-4 mt-4 text-xs">
           © {new Date().getFullYear()} Richenel&apos;s AI Agency. All rights
-          reserved
+          reserved.{" "}
+          <Link
+            href="/terms"
+            className="text-blue-500 hover:underline"
+          >
+            Terms and Conditions
+          </Link>
         </div>
       </div>
     </motion.div>

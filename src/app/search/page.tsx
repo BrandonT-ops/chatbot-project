@@ -1,18 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useChatStore } from "@/lib/store";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeftIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
+import Header from "@/components/ui/header";
 
 const SearchResults = () => {
   const { searchResults } = useChatStore();
   const router = useRouter();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const toggleExpand = () => setIsExpanded((prev) => !prev);
 
-  const handleNavigation = (view: "chat" | "search") => {
+  const handleNavigation = (view: "chat") => {
     if (view === "chat") {
       router.push("/chat");
     }
@@ -22,140 +24,149 @@ const SearchResults = () => {
 
   if (searchResults.isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-6">
-        <div className="container mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl p-8"
-          >
-            <div className="flex items-center space-x-3 mb-6">
-              <SparklesIcon className="h-8 w-8 text-blue-500" />
-              <h2 className="text-2xl font-bold text-gray-800">
-                Searching for &quot;{searchResults.query}&quot;...
-              </h2>
+      <div className="bg-gray-50 min-h-screen p-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-sm text-gray-600 mb-4">
+            Searching for &quot;{searchResults.query}&quot;...
+          </div>
+          {[...Array(6)].map((_, index) => (
+            <div
+              key={index}
+              className="border-b border-gray-200 py-4 animate-pulse"
+            >
+              <div className="h-4 bg-gray-300 mb-2 w-3/4"></div>
+              <div className="h-3 bg-gray-200 mb-2 w-1/2"></div>
+              <div className="h-3 bg-gray-200 w-2/3"></div>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="bg-gray-100 border-2 border-gray-200 rounded-xl overflow-hidden shadow-lg animate-pulse"
-                >
-                  <div className="h-56 bg-gray-300 mb-4"></div>
-                  <div className="p-4 space-y-3">
-                    <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-300 rounded w-1/2"></div>
-                    <div className="h-4 bg-gray-300 rounded w-1/3"></div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white p-6">
-      <div className="container mx-auto mt-10">
-        {/* Navigation Button */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed top-6 left-6 z-50"
-        >
-          <button
-            onClick={() => handleNavigation("chat")}
-            className="p-3 bg-white/80 backdrop-blur-lg rounded-full shadow-xl hover:bg-blue-100 transition-all group"
-          >
-            <ArrowLeftIcon className="h-6 w-6 text-blue-600 group-hover:text-blue-800 transition-colors" />
-          </button>
-        </motion.div>
+    <div className="bg-gray-50 min-h-screen">
+      <Header />
+      <div className="max-w-4xl mx-auto p-4 mt-16">
+        {/* Header */}
 
-        {/* Page Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-10"
-        >
-          <h1 className="text-4xl font-extrabold text-gray-800 mb-4">
-            Product Search Results
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Search results for <span className="text-blue-500">&quot;{searchResults.query}&quot;</span>
-          </p>
-        </motion.div>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
+            {/* Back to Chat Button */}
+            <button
+              onClick={() => handleNavigation("chat")}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Back to Chat
+            </button>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl p-6"
-        >
+            {/* Search Results Label */}
+            <div className="text-lg font-semibold text-gray-700 bg-gray-100 px-4 py-2 rounded-full shadow-sm">
+              Search Results
+            </div>
+          </div>
+        </div>
+
+        {/* Search Info */}
+        <div className="text-sm text-gray-600 mb-6">
+          About {searchResults.results.length} results
+        </div>
+
+        {/* Search Results */}
+        <div>
           {searchResults.results.length === 0 ? (
-            <div className="text-center py-12 bg-gray-100 rounded-xl">
-              <p className="text-gray-600 text-xl">No results found.</p>
+            <div className="text-center py-12 text-gray-600">
+              No results found.
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {searchResults.results.map((product, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="bg-white border-2 border-gray-100 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl hover:border-blue-100 transition-all group"
-                >
-                  <div className="relative overflow-hidden">
+            searchResults.results.map((product, index) => (
+              <div
+                key={index}
+                className="border-b border-gray-200 py-4 hover:bg-gray-100 transition"
+              >
+                <div className="flex space-x-4">
+                  <div className="flex-shrink-0 w-36 h-36">
                     <Image
                       src={product.image_url || "/api/placeholder/200/200"}
                       alt={product.name}
-                      width={300}
-                      height={300}
-                      className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-300"
+                      width={144}
+                      height={144}
+                      className="object-cover w-full h-full rounded"
                       unoptimized
                     />
                   </div>
-                  <div className="p-4 space-y-2">
-                    <h3 className="font-bold text-lg text-gray-800 truncate">
-                      {product.name}
-                    </h3>
-                    <div className="flex justify-between items-center">
-                      <p className="text-blue-600 font-semibold text-lg">
-                        {product.price.toLocaleString()} FCFA
-                      </p>
-                      <p
-                        className={`text-sm font-medium ${
-                          product.disponibilite === "Out of Stock !"
-                            ? "text-red-500"
-                            : "text-green-500"
-                        }`}
-                      >
-                        {product.disponibilite}
-                      </p>
-                    </div>
+                  <div className="flex-grow">
                     <Link
                       href={product.url}
-                      passHref
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 w-full bg-blue-500 text-white py-2.5 rounded-lg hover:bg-blue-600 transition inline-block text-center font-semibold tracking-wider"
+                      className="text-blue-600 hover:underline text-lg font-medium"
                     >
-                      View Details
+                      {product.name}
                     </Link>
+                    <div className="text-sm text-gray-700 my-2">
+                      <p
+                        className={`${
+                          isExpanded ? "" : "line-clamp-2"
+                        } leading-relaxed`}
+                      >
+                        {product.description ||
+                          "Short description about the product goes here."}
+                      </p>
+                      {product.description?.length > 100 && ( // Show "Read More" only if the description is long enough
+                        <button
+                          onClick={toggleExpand}
+                          className="text-blue-600 hover:underline mt-2 inline-block"
+                        >
+                          {isExpanded ? "Read Less" : "Read More"}
+                        </button>
+                      )}
+                    </div>
+                    <div className="text-sm text-green-700 mb-1">
+                      {product.price.toLocaleString()} FCFA
+                    </div>
+                    <div
+                      className={`text-sm ${
+                        product.disponibilite === "Out of Stock !"
+                          ? "text-red-500"
+                          : "text-green-500"
+                      }`}
+                    >
+                      {product.disponibilite}
+                    </div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
+                </div>
+              </div>
+            ))
           )}
-        </motion.div>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-center items-center mt-8 space-x-4 text-blue-600">
+          <button
+            className="flex items-center hover:underline disabled:opacity-50"
+            disabled
+          >
+            <ChevronLeftIcon className="h-5 w-5 mr-1" />
+            Previous
+          </button>
+          <div className="space-x-2">
+            {[1, 2, 3, 4, 5].map((page) => (
+              <button
+                key={page}
+                className={`px-3 py-1 rounded ${
+                  page === 1 ? "bg-blue-600 text-white" : "hover:bg-gray-200"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+          <button className="flex items-center hover:underline">
+            Next
+            <ChevronRightIcon className="h-5 w-5 ml-1" />
+          </button>
+        </div>
       </div>
     </div>
   );

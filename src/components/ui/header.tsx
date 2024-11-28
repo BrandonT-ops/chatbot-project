@@ -61,6 +61,7 @@ const Header = () => {
     picture?: string;
   }>({});
   const router = useRouter();
+  const [showModal, setShowModal] = useState(false); // Modal visibility state
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,14 +126,24 @@ const Header = () => {
 
   const handleCredentialResponse = async (response: { credential: string }) => {
     try {
-      const res = await fetch("https://maguida.raia.cm/auth/google/", {
+      // const res = await fetch("https://maguida.raia.cm/auth/google/login/", {
+      //   method: "POST",
+      //   headers: {
+      //     'Accept': 'application/json',
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify({
+      //     token: response.credential, // Google ID token
+      //   }),
+      // });
+
+      const res = await fetch("https://maguida.raia.cm/auth/google/login/", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+         // Accept: "application/json",
+          "Content-Type": "text/plain", // Specify plain text
         },
-        body: JSON.stringify({
-          token: response.credential, // Google ID token
-        }),
+        body: response.credential, // Send the token directly as a string
       });
 
       if (res.ok) {
@@ -156,6 +167,19 @@ const Header = () => {
     } catch (err) {
       console.error("Error logging in:", err);
       alert("Login failed!");
+    }
+  };
+
+  // const handleLoginClick = () => {
+  //   // Show the modal when login is clicked
+  //   setShowModal(true);
+  // };
+
+  const handleAcceptTerms = () => {
+    setShowModal(false); // Close the modal
+    // Logic to proceed with Google login
+    if (typeof window !== "undefined" && window.google?.accounts) {
+      window.google.accounts.id.prompt(); // Trigger Google login prompt
     }
   };
 
@@ -317,7 +341,7 @@ const Header = () => {
                 <div
                   id="g_id_onload"
                   data-client_id="508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com"
-                  data-login_uri="https://maguida.raia.cm/auth/google/"
+                  data-login_uri="https://maguida.raia.cm/auth/google/login/"
                   data-auto_prompt="false"
                 >
                   <div
@@ -356,6 +380,40 @@ const Header = () => {
           </div>
         </DisclosurePanel>
       </Disclosure>
+
+
+      {/* Modal for accepting terms */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md">
+            <h2 className="text-xl font-bold mb-4">Accept Terms & Privacy Policy</h2>
+            <p className="mb-4">
+              By logging in, you agree to our{" "}
+              <a href="/terms" className="text-blue-500 underline">
+                Terms of Use
+              </a>{" "}
+              and{" "}
+              <a href="/privacy" className="text-blue-500 underline">
+                Privacy Policy
+              </a>.
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowModal(false)}
+                className="mr-2 bg-gray-300 px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAcceptTerms}
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+              >
+                Accept and Login
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

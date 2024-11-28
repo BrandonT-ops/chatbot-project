@@ -24,6 +24,7 @@ export interface ProductSearchResult {
   categorie: string;
   image_url: string;
   score: number;
+  description: string;
 }
 
 export interface SearchResultType {
