@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+//use effect
 import {
   Disclosure,
   DisclosureButton,
@@ -19,35 +20,18 @@ import {
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { useChatStore } from "@/lib/store";
-import Script from "next/script";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
+import GoogleSignIn from "./googlesignin";
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: {
-            client_id: string;
-            callback: (response: { credential: string }) => void;
-          }) => void;
-          renderButton: (element: HTMLElement, options: object) => void;
-          prompt: () => void;
-          disableAutoSelect: () => void;
-        };
-      };
-    };
-  }
-}
 
 // Define the OAuth configuration
-const OAUTH_CONFIG = {
-  CLIENT_ID: "508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com",
-  REDIRECT_URI: "https://maguida.cm",
-  SCOPE: "openid email profile",
-  AUTHORIZATION_ENDPOINT: "https://accounts.google.com/o/oauth2/v2/auth",
-  TOKEN_ENDPOINT: "https://maguida.raia.cm/auth/google/login/"
-};
+// const OAUTH_CONFIG = {
+//   CLIENT_ID: "508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com",
+//   REDIRECT_URI: "https://maguida.cm",
+//   SCOPE: "openid email profile",
+//   AUTHORIZATION_ENDPOINT: "https://accounts.google.com/o/oauth2/v2/auth",
+//   TOKEN_ENDPOINT: "https://maguida.raia.cm/auth/google/login/"
+// };
 
 const navigation = [
   { name: "Dashboard", href: "#", current: true },
@@ -74,169 +58,90 @@ const Header = () => {
   const [isTermsChecked, setIsTermsChecked] = useState(false);
 
 
-  // const initiateOAuthFlow = () => {
-  //   const authUrl = new URL(OAUTH_CONFIG.AUTHORIZATION_ENDPOINT);
-  //   authUrl.searchParams.set('client_id', OAUTH_CONFIG.CLIENT_ID);
-  //   authUrl.searchParams.set('redirect_uri', OAUTH_CONFIG.REDIRECT_URI);
-  //   authUrl.searchParams.set('response_type', 'code');
-  //   authUrl.searchParams.set('scope', OAUTH_CONFIG.SCOPE);
-  //   authUrl.searchParams.set('access_type', 'offline');
-  //   authUrl.searchParams.set('prompt', 'consent');
-
-  //   // Redirect to Google OAuth consent screen
-  //   window.location.href = authUrl.toString();
-  // };
-
-  // OAuth configuration
-
-
-
-  // New function to handle OAuth code exchange
-  const exchangeAuthorizationCode = async (code: string) => {
-    try {
-      const response = await fetch(OAUTH_CONFIG.TOKEN_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ code })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to exchange authorization code');
-      }
-
-      const data = await response.json();
-      
-      // Assuming the response contains user profile information
-      setUserProfile({
-        name: data.name,
-        email: data.email,
-        picture: data.picture
-      });
-      setIsLoggedIn(true);
-
-      // Optional: Redirect to a default page after successful login
-      router.push('/dashboard');
-    } catch (error) {
-      console.error('OAuth login error:', error);
-      alert('Login failed');
-    }
-  };
-
-    // Check for authorization code on component mount
-    useEffect(() => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const authCode = urlParams.get('code');
-  
-      if (authCode) {
-        // Remove the code from the URL to prevent repeated exchanges
-        window.history.replaceState({}, document.title, window.location.pathname);
-        
-        // Exchange the authorization code
-        exchangeAuthorizationCode(authCode);
-      }
-    }, []);
-
-     // Combine OAuth flow into the existing login process
-  const triggerGoogleLogin = () => {
-    const authUrl = new URL(OAUTH_CONFIG.AUTHORIZATION_ENDPOINT);
-    authUrl.searchParams.set('client_id', OAUTH_CONFIG.CLIENT_ID);
-    authUrl.searchParams.set('redirect_uri', OAUTH_CONFIG.REDIRECT_URI);
-    authUrl.searchParams.set('response_type', 'code');
-    authUrl.searchParams.set('scope', OAUTH_CONFIG.SCOPE);
-    authUrl.searchParams.set('access_type', 'offline');
-    authUrl.searchParams.set('prompt', 'consent');
-
-    // Redirect to Google OAuth consent screen
-    window.location.href = authUrl.toString();
-  };
 
   // Check for authorization code on component mount
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const authCode = urlParams.get('code');
+  // useEffect(() => {
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   const authCode = urlParams.get('code');
 
-    if (authCode) {
-      // Remove the code from the URL to prevent repeated exchanges
-      window.history.replaceState({}, document.title, window.location.pathname);
-      
-      // Exchange the authorization code
-      const exchangeAuthorizationCode = async () => {
-        try {
-          const response = await fetch(OAUTH_CONFIG.TOKEN_ENDPOINT, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify({ code: authCode })
-          });
+  //   if (authCode) {
+  //     // Remove the code from the URL to prevent repeated exchanges
+  //     window.history.replaceState({}, document.title, window.location.pathname);
 
-          if (!response.ok) {
-            throw new Error('Failed to exchange authorization code');
-          }
+  //     // Exchange the authorization code
+  //     const exchangeAuthorizationCode = async () => {
+  //       try {
+  //         const response = await fetch(OAUTH_CONFIG.TOKEN_ENDPOINT, {
+  //           method: 'POST',
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //             'Accept': 'application/json'
+  //           },
+  //           body: JSON.stringify({ code: authCode })
+  //         });
 
-          const data = await response.json();
-          
-          // Assuming the response contains user profile information
-          setUserProfile({
-            name: data.name,
-            email: data.email,
-            picture: data.picture
-          });
-          setIsLoggedIn(true);
+  //         if (!response.ok) {
+  //           throw new Error('Failed to exchange authorization code');
+  //         }
 
-          // Optional: Redirect to a default page after successful login
-          router.push('/chat');
-        } catch (error) {
-          console.error('OAuth login error:', error);
-          alert('Login failed');
-        }
-      };
+  //         const data = await response.json();
 
-      exchangeAuthorizationCode();
-    }
-  }, []);
+  //         // Assuming the response contains user profile information
+  //         setUserProfile({
+  //           name: data.name,
+  //           email: data.email,
+  //           picture: data.picture
+  //         });
+  //         setIsLoggedIn(true);
+
+  //         // Optional: Redirect to a default page after successful login
+  //         router.push('/chat');
+  //       } catch (error) {
+  //         console.error('OAuth login error:', error);
+  //         alert('Login failed');
+  //       }
+  //     };
+
+  //     exchangeAuthorizationCode();
+  //   }
+  // }, []);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     const trimmedTerm = searchTerm.trim();
-  
+
     if (!trimmedTerm) {
       setSearchResults(null);
       return;
     }
-  
+
     // Set loading state before fetching
     setSearchResults({
       query: trimmedTerm,
       results: [],
       isLoading: true, // Add loading state
     });
-  
+
     // Navigate to the search page with the search term as a query parameter
     router.push(`/search?term=${encodeURIComponent(trimmedTerm)}`);
 
-  
     try {
       const response = await fetch(
         `https://maguida.raia.cm/shop/search/?query=${encodeURIComponent(
           trimmedTerm
         )}`
       );
-  
+
       if (!response.ok) {
         throw new Error(
           `Search request failed with status: ${response.status}`
         );
       }
-  
+
       const data = await response.json();
       console.log(data);
-  
+
       // Check if the response is an array
       if (Array.isArray(data) && data.length > 0) {
         setSearchResults({
@@ -253,7 +158,7 @@ const Header = () => {
       }
     } catch (error) {
       console.error("Search error:", error);
-  
+
       // Handle error state
       setSearchResults({
         query: trimmedTerm,
@@ -262,105 +167,14 @@ const Header = () => {
       });
     }
   };
-  
-
-  const handleCredentialResponse = async (response: { credential: string }) => {
-    try {
-      // const res = await fetch("https://maguida.raia.cm/auth/google/login/", {
-      //   method: "POST",
-      //   headers: {
-      //     'Accept': 'application/json',
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify({
-      //     token: response.credential, // Google ID token
-      //   }),
-      // });
-
-      const res = await fetch("https://maguida.raia.cm/auth/google/login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json", // Specify JSON
-        },
-        body: JSON.stringify({ token: response.credential }) // Wrap the token in a JSON object
-      });
-      
-
-      if (res.ok) {
-        const data = await res.json();
-        console.log("User authenticated successfully:", data);
-
-        // Decode the JWT to get user information
-        const decodedToken = JSON.parse(
-          atob(response.credential.split(".")[1])
-        );
-
-        setUserProfile({
-          name: decodedToken.name,
-          email: decodedToken.email,
-          picture: decodedToken.picture,
-        });
-        setIsLoggedIn(true);
-      } else {
-        throw new Error("Failed to log in");
-      }
-    } catch (err) {
-      console.error("Error logging in:", err);
-      alert("Login failed!");
-    }
-  };
-
-  // const handleLoginClick = () => {
-  //   // Show the modal when login is clicked
-  //   setShowModal(true);
-  // };
-
-  // const handleAcceptTerms = () => {
-  //   setShowModal(false); // Close the modal
-  //   // Logic to proceed with Google login
-  //   if (typeof window !== "undefined" && window.google?.accounts) {
-  //     window.google.accounts.id.prompt(); // Trigger Google login prompt
-  //   }
-  // };
-
-  // Initialize Google Login
-  useEffect(() => {
-    // Add a type check to handle potential undefined state
-    if (typeof window !== "undefined" && window.google?.accounts) {
-      window.google.accounts.id.initialize({
-        client_id:
-          "508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com",
-        callback: handleCredentialResponse,
-      });
-
-      // Render the Google Sign-In button
-      const buttonElement = document.getElementById("g_id_onload");
-      if (buttonElement) {
-        window.google.accounts.id.renderButton(
-          buttonElement,
-          { theme: "outline", size: "large" }
-        );
-      }
-    }
-  }, []);
 
   const handleSignOut = () => {
     setIsLoggedIn(false);
     setUserProfile({});
-    // Safely call disableAutoSelect if google is available
-    if (typeof window !== "undefined" && window.google?.accounts) {
-      window.google.accounts.id.disableAutoSelect();
-    }
   };
 
   return (
     <>
-      {/* Google Sign-In Script */}
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-      />
-
       <Disclosure
         as="nav"
         className="bg-white border-b-2 border-gray-200 fixed top-0 w-full z-50"
@@ -418,7 +232,7 @@ const Header = () => {
                     }
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       handleSearch(e);
                     }
                   }}
@@ -478,22 +292,24 @@ const Header = () => {
                   </Menu>
                 </>
               ) : (
-                <div
-                  id="g_id_onload"
-                  data-client_id="508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com"
-                  data-login_uri="https://maguida.raia.cm/auth/google/login/"
-                  data-auto_prompt="false"
-                >
-                  <div
-                    className="g_id_signin block w-full sm:w-auto sm:h-auto sm:overflow-visible sm:text-base w-12 h-12 overflow-hidden text-transparent"
-                    data-type="standard"
-                    data-size="large"
-                    data-theme="outline"
-                    data-text="sign_in_with"
-                    data-shape="rectangular"
-                    data-logo_alignment="left"
-                  />
-                </div>
+                <GoogleSignIn />
+              //   <div
+              //   id="g_id_onload"
+              //   data-client_id="508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com"
+              //   data-login_uri="http://localhost:3000"
+              //   data-auto_prompt="false"
+              // >
+              //   <div
+              //     className="g_id_signin block w-full sm:w-auto sm:h-auto sm:overflow-visible sm:text-base w-12 h-12 overflow-hidden text-transparent"
+              //     data-type="standard"
+              //     data-size="large"
+              //     data-theme="outline"
+              //     data-text="sign_in_with"
+              //     data-shape="rectangular"
+              //     data-logo_alignment="left"
+              //     onClick={() => console.log("Google Sign-In button clicked!")}
+              //   />
+              // </div>
               )}
             </div>
           </div>
@@ -521,25 +337,24 @@ const Header = () => {
         </DisclosurePanel>
       </Disclosure>
 
-
       {/* Modal for accepting terms */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white w-full max-w-md mx-4 rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
             {/* Header */}
             <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-6 w-6 mr-2 text-blue-600" 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2 text-blue-600"
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
               <h2 className="text-xl font-bold text-gray-800">
@@ -551,35 +366,36 @@ const Header = () => {
             <div className="p-6 space-y-4">
               <p className="text-gray-600 text-sm leading-relaxed">
                 Before you continue, please review and accept our{" "}
-                <a 
-                  href="/terms" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-blue-600 hover:underline font-semibold"
                 >
                   Terms of Use
                 </a>{" "}
                 and{" "}
-                <a 
-                  href="/privacy" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-blue-600 hover:underline font-semibold"
                 >
                   Privacy Policy
-                </a>.
+                </a>
+                .
               </p>
 
               <div className="flex items-center">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   id="terms-checkbox"
                   checked={isTermsChecked}
                   onChange={() => setIsTermsChecked(!isTermsChecked)}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label 
-                  htmlFor="terms-checkbox" 
+                <label
+                  htmlFor="terms-checkbox"
                   className="ml-2 block text-sm text-gray-900"
                 >
                   I have read and agree to the Terms and Privacy Policy
@@ -589,17 +405,17 @@ const Header = () => {
 
             {/* Actions */}
             <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-              <button 
+              <button
                 onClick={() => setShowModal(false)}
                 className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={() => {
                   if (isTermsChecked) {
                     setShowModal(false);
-                    triggerGoogleLogin();
+                    //triggerGoogleLogin();
                   }
                 }}
                 disabled={!isTermsChecked}

@@ -1,6 +1,9 @@
 import React from "react";
 
 const TermsPage = () => {
+  const today = new Date();
+  const formattedDate = today.toISOString().split('T')[0];
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="bg-white shadow-md py-8">
@@ -8,7 +11,7 @@ const TermsPage = () => {
           Politique de Confidentialité de Maguida
         </h1>
         <p className="text-center text-gray-600 text-sm mt-2">
-          Dernière mise à jour : [Date]
+          Dernière mise à jour : {formattedDate}
         </p>
       </div>
 
