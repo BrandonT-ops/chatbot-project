@@ -127,6 +127,60 @@ const TermsPage = () => {
           </ul>
         </section>
 
+
+        {/* Section 5: Protection des données */}
+        <section>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+            6. Vos droits
+          </h2>
+          <p className="text-gray-700">
+          Vous disposez des droits suivants sur vos données :
+          </p>
+          <ul className="list-disc space-y-2 text-gray-700 pl-5 mt-4">
+            <li>Accès : obtenir une copie des données que nous détenons à votre sujet.</li>
+            <li>Rectification : corriger des données inexactes ou incomplètes.</li>
+            <li>Suppression : demander la suppression de vos données, sous réserve de nos obligations légales.</li>
+            <li>Opposition : refuser certains traitements, comme l’utilisation à des fins de marketing.</li>
+            <li>Portabilité : recevoir vos données dans un format structuré et couramment utilisé.</li>
+          </ul>
+          <p className="text-gray-700 mt-4">Pour exercer vos droits, contactez-nous à contact@raia.cm. Nous répondrons dans un délai de 30 jours.</p>
+        </section>
+
+
+        <section>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+            7. Cookies
+          </h2>
+          <p className="text-gray-700">
+          Nous utilisons des cookies pour :
+          </p>
+          <ul className="list-disc space-y-2 text-gray-700 pl-5 mt-4">
+            <li>Fonctionnalité : assurer le bon fonctionnement du site.</li>
+            <li>Analyse : collecter des données anonymisées sur l’utilisation de notre service.</li>
+          </ul>
+          <p className="text-gray-700 mt-4">Vous pouvez désactiver les cookies via les paramètres de votre navigateur. Toutefois, certaines fonctionnalités de Maguida pourraient ne pas fonctionner correctement.</p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+            8. Mineurs
+          </h2>
+          <p className="text-gray-700">
+          Maguida n’est pas destiné aux utilisateurs de moins de 16 ans. Nous ne collectons pas sciemment de données personnelles auprès de mineurs. Si vous êtes parent ou tuteur et pensez que votre enfant a fourni des données, contactez-nous pour les supprimer.
+          </p>
+        </section>
+
+
+
+        <section>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+            9. Modifications de cette politique
+          </h2>
+          <p className="text-gray-700">
+          Nous pouvons mettre à jour cette politique à tout moment. Les modifications seront publiées sur cette page avec une date de mise à jour. En continuant à utiliser Maguida après une modification, vous acceptez les nouvelles dispositions.
+          </p>
+        </section>
+
         {/* Footer */}
         <footer className="text-center text-sm text-gray-600 mt-12">
           <p>
