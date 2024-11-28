@@ -442,7 +442,7 @@ const ChatInterface: React.FC = () => {
             <div className="text-center text-gray-500 py-4 mt-4 text-xs">
               © {new Date().getFullYear()} Richenel&apos;s AI Agency. All rights
               reserved.{" "}
-              <Link href="/terms" className="text-blue-500 hover:underline">
+              <Link href="/conditions" className="text-blue-500 hover:underline">
                 Terms and Conditions
               </Link>
             </div>

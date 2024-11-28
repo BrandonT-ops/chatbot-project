@@ -367,7 +367,7 @@ const Header = () => {
               <p className="text-gray-600 text-sm leading-relaxed">
                 Before you continue, please review and accept our{" "}
                 <a
-                  href="/terms"
+                  href="/conditions"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline font-semibold"

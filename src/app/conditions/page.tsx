@@ -82,12 +82,12 @@ const ConditionsPage = () => {
         {/* Section 3: Données collectées */}
         <section>
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-            3. Acceptation des Conditions d'utilisation
+            3. Acceptation des Conditions d&apos;utilisation
           </h2>
           <p className="text-gray-700 mb-4">
             En accédant ou en utilisant Maguida, vous acceptez de vous conformer
-            aux présentes Conditions d'utilisation. Si vous n'acceptez pas ces
-            termes, vous n'êtes pas autorisé à utiliser le Service.
+            aux présentes Conditions d&apos;utilisation. Si vous n&apos;acceptez pas ces
+            termes, vous n&apos;êtes pas autorisé à utiliser le Service.
           </p>
         </section>
 
@@ -100,10 +100,10 @@ const ConditionsPage = () => {
           <ol className="list-disc space-y-3 text-gray-700 pl-5">
             <li>
               La recherche de produits en ligne via un moteur de recherche basé
-              sur l'IA.
+              sur l&apos;IA.
             </li>
             <li>
-              L'interaction avec un chatbot conçu pour répondre aux questions
+              L&apos;interaction avec un chatbot conçu pour répondre aux questions
               liées aux produits.
             </li>
             <li>
@@ -124,14 +124,14 @@ const ConditionsPage = () => {
           <ul className="list-disc space-y-2 text-gray-700 pl-5 mt-4">
             <li>
               À des fins personnelles et non commerciales, sauf autorisation
-              écrite préalable de Richenel's AI Agency.
+              écrite préalable de Richenel&apos;s AI Agency.
             </li>
             <li>Conformément aux lois et réglementations applicables.</li>
           </ul>
           <p className="text-gray-700">Il est strictement interdit :</p>
           <ol className="list-disc space-y-2 text-gray-700 pl-5 mt-4">
             <li>
-              De tenter d'accéder de manière non autorisée à nos systèmes ou à
+              De tenter d&apos;accéder de manière non autorisée à nos systèmes ou à
               ceux de nos partenaires.
             </li>
             <li>
@@ -154,7 +154,7 @@ const ConditionsPage = () => {
             <li>
               Tous les droits de propriété intellectuelle relatifs au Service, y
               compris le code, le design, le contenu, et les bases de données,
-              appartiennent exclusivement à Richenel's AI Agency.
+              appartiennent exclusivement à Richenel&apos;s AI Agency.
             </li>
             <li>
               Vous ne pouvez copier, modifier, distribuer ou exploiter
@@ -176,9 +176,9 @@ const ConditionsPage = () => {
             </li>
             <li>
               Licence accordée : En soumettant du contenu, vous accordez à
-              Richenel's AI Agency une licence non exclusive, mondiale et
+              Richenel&apos;s AI Agency une licence non exclusive, mondiale et
               gratuite pour utiliser, reproduire et analyser ces contenus dans
-              le cadre du fonctionnement et de l'amélioration du Service.
+              le cadre du fonctionnement et de l&apos;amélioration du Service.
             </li>
             <li>
               Suppression : Nous nous réservons le droit de supprimer tout
@@ -193,8 +193,8 @@ const ConditionsPage = () => {
           </h2>
           <ol className="list-disc space-y-2 text-gray-700 pl-5 mt-4">
             <li>
-              L'utilisation de vos données est régie par notre Politique de
-              Confidentialité, disponible à l'adresse suivante : [Lien vers la
+              L&apos;utilisation de vos données est régie par notre Politique de
+              Confidentialité, disponible à l&apos;adresse suivante : [Lien vers la
               politique de confidentialité].
             </li>
             <li>
@@ -203,7 +203,7 @@ const ConditionsPage = () => {
               donnée personnelle identifiable ne sera vendue à des tiers.
             </li>
             <li>
-              Vous avez le droit de demander l'accès, la rectification ou la
+              Vous avez le droit de demander l&apos;accès, la rectification ou la
               suppression de vos données en nous contactant à contact@raia.cm.
             </li>
           </ol>
@@ -215,19 +215,19 @@ const ConditionsPage = () => {
           </h2>
           <ol className="list-disc space-y-2 text-gray-700 pl-5 mt-4">
             <li>
-              Maguida est fourni "tel quel". Nous ne garantissons pas que le
+              Maguida est fourni &quot;tel quel&quot;. Nous ne garantissons pas que le
               Service sera exempt d’erreurs ou d’interruptions.
             </li>
             <li>
-              Richenel's AI Agency ne peut être tenue responsable des pertes ou
+              Richenel&apos;s AI Agency ne peut être tenue responsable des pertes ou
               dommages directs, indirects, spéciaux ou consécutifs liés à
-              l'utilisation de Maguida.
+              l&apos;utilisation de Maguida.
             </li>
             <li>
               Les résultats affichés par le moteur de recherche ou le chatbot
               sont générés automatiquement et peuvent contenir des
-              inexactitudes. L'utilisateur est seul responsable de
-              l'interprétation et de l'utilisation de ces résultats.
+              inexactitudes. L&apos;utilisateur est seul responsable de
+              l&apos;interprétation et de l&apos;utilisation de ces résultats.
             </li>
           </ol>
         </section>
@@ -239,7 +239,7 @@ const ConditionsPage = () => {
           <p className="text-gray-700">
             Nous nous réservons le droit de modifier ces Conditions à tout
             moment. Les modifications seront publiées sur cette page avec une
-            mise à jour de la date en haut. En continuant d'utiliser le Service
+            mise à jour de la date en haut. En continuant d&apos;utiliser le Service
             après une modification, vous acceptez les nouvelles Conditions.{" "}
           </p>
         </section>
@@ -250,7 +250,7 @@ const ConditionsPage = () => {
           </h2>
           <ol className="list-disc space-y-2 text-gray-700 pl-5 mt-4">
             <li>
-              Tout litige résultant de l'utilisation de Maguida sera soumis aux
+              Tout litige résultant de l&apos;utilisation de Maguida sera soumis aux
               lois de la République du Cameroun.
             </li>
             <li>
@@ -269,7 +269,7 @@ const ConditionsPage = () => {
               Nous pouvons suspendre ou résilier votre accès au Service sans
               préavis en cas de non-respect des présentes Conditions.
             </li>
-            <li>Vous pouvez cesser d'utiliser le Service à tout moment.</li>
+            <li>Vous pouvez cesser d&apos;utiliser le Service à tout moment.</li>
           </ol>
         </section>
 
@@ -282,7 +282,7 @@ const ConditionsPage = () => {
             </h2>
             <p className="text-center text-gray-600 text-sm mt-2 mb-9">
               En accédant à Maguida, vous reconnaissez avoir lu et accepté ces
-              Conditions d'utilisation.
+              Conditions d&apos;utilisation.
             </p>
           </section>
           <p>
