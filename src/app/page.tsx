@@ -1,16 +1,17 @@
-"use client"
-import ChatInterface from "@/components/ui/chatInterface"; 
+"use client";
+import ChatInterface from "@/components/ui/chatInterface";
 import Header from "@/components/ui/header";
 import SideBar from "@/components/ui/sidebar";
-//  import { useState } from "react";
+import { useChatStore } from "@/lib/store";
 
 export default function Home() {
-  // const [token, ] = useState('your-auth-token');
+  const {isLoggedIn} = useChatStore();
+
   return (
     <main className="min-h-screen bg-gray-50">
       <Header />
       <ChatInterface />
-      <SideBar />
+      {isLoggedIn && <SideBar />} 
     </main>
   );
 }

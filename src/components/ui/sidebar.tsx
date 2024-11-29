@@ -11,6 +11,7 @@ import {
   ChatBubbleOvalLeftEllipsisIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
+import { useChatStore } from "@/lib/store";
 
 const SideBar = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -21,6 +22,23 @@ const SideBar = () => {
     { id: 3, title: "Performance Optimization" },
   ]);
   const [visibleConversations, setVisibleConversations] = useState(5);
+
+  const { clearUserToken, clearMessages, clearSearch, clearUserData, setIsLoggedIn } = useChatStore();
+
+
+  const handleLogout = () => {
+    // Clear the authentication data in the store
+    clearUserToken();
+    clearMessages();
+    clearSearch();
+    clearUserData();
+    setIsLoggedIn(false)
+    
+    // Optional: Add any additional logout logic, like:
+    // - Redirecting to login page
+    // - Clearing other app state
+    // - Calling a backend logout endpoint
+  };
 
   // Check screen size and set mobile view
   useEffect(() => {
@@ -212,16 +230,17 @@ const SideBar = () => {
             <Cog6ToothIcon className="h-5 w-5" />
             {isOpen && <span className="ml-2">Settings</span>}
           </button> */}
-          <button
-            className={`
-            flex items-center p-2 hover:bg-gray-100 
-            rounded-md text-gray-900 
-            ${!isOpen && "justify-center"}
-          `}
-          >
-            <ArrowLeftOnRectangleIcon className="h-5 w-5" />
-            {isOpen && <span className="ml-2 font-semibold">Logout</span>}
-          </button>
+         <button
+      className={`
+        flex items-center p-2 hover:bg-gray-100 
+        rounded-md text-gray-900 
+        ${!isOpen && "justify-center"}
+      `}
+      onClick={handleLogout}
+    >
+      <ArrowLeftOnRectangleIcon className="h-5 w-5" />
+      {isOpen && <span className="ml-2 font-semibold">Logout</span>}
+    </button>
         </div>
       </div>
     </>

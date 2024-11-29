@@ -13,13 +13,15 @@ export type MessageType = {
 //for usage through out the app
 export type UserToken ={
   key: string;
+  google_token: string;
 }
 
 // Add a new type for user authentication data
-export interface UserAuthData {
-  userId?: string;
-  email?: string;
-  name?: string;
+export interface UserData {
+  userId: string;
+  email: string;
+  firstname: string;
+  lastname: string;
   profilePicture?: string;
 }
 
@@ -62,6 +64,11 @@ export interface SearchResultType {
 
 // Define the state interface
 interface ChatStore {
+  //login state
+  isLoggedIn: boolean;
+  setIsLoggedIn: (status: boolean) => void;
+
+
   messages: MessageType[];
   addMessage: (message: MessageType) => void;
   updateMessage: (id: string, updates: Partial<MessageType>) => void;
@@ -72,6 +79,7 @@ interface ChatStore {
   searchResults: SearchResultType | null;
   setSearchResults: (results: SearchResultType | null) => void;
   setSearchLoading: (isLoading: boolean) => void;
+  clearSearch: () => void;
 
   conversations: Conversation[];
   setConversations: (conversations: Conversation[]) => void;
@@ -90,9 +98,9 @@ interface ChatStore {
 
 
    // New authentication-related state and methods
-   userAuth: UserAuthData | null;
-   setUserAuth: (authData: UserAuthData | null) => void;
-   clearUserAuth: () => void;
+   userData: UserData | null;
+   setUserData: (authData: UserData | null) => void;
+   clearUserData: () => void;
 
    userToken: UserToken | null;
    setUserToken: (userToken: UserToken | null ) => void;
@@ -117,9 +125,12 @@ export const useChatStore = create<ChatStore>()(
         })),
       clearMessages: () => set({ messages: [] }),
 
-      userAuth: null,
-      setUserAuth: (authData: UserAuthData | null) => set({ userAuth: authData }),
-      clearUserAuth: () => set({ userAuth: null }),
+      isLoggedIn: false, // Default to false
+      setIsLoggedIn: (status) => set({ isLoggedIn: status }),
+
+      userData: null,
+      setUserData: (authData: UserData | null) => set({ userData: authData }),
+      clearUserData: () => set({ userData: null }),
 
       userToken: null,
       setUserToken: (userToken: UserToken | null) => set({ userToken: userToken}),
@@ -133,6 +144,7 @@ export const useChatStore = create<ChatStore>()(
             ? { ...state.searchResults, isLoading }
             : { query: '', results: [], isLoading },
         })),
+      clearSearch: () => set({searchResults: null}),
 
       conversations: [],
       setConversations: (conversations: Conversation[]) => set({ conversations }),
@@ -221,8 +233,9 @@ export const useChatStore = create<ChatStore>()(
         searchResults: state.searchResults,
         conversations: state.conversations,
         conversationMessages: state.conversationMessages,
-        userAuth: state.userAuth,
+        userData: state.userData,
         userToken: state.userToken,
+        isLoggedIn: state.isLoggedIn,
       }),
     }
   )

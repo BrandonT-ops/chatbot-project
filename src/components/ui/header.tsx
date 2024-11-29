@@ -17,6 +17,7 @@ import {
   HeartIcon,
   ShoppingBagIcon,
   MagnifyingGlassIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { useChatStore } from "@/lib/store";
@@ -34,9 +35,7 @@ import GoogleSignIn from "./googlesignin";
 
 const navigation = [
   { name: "Dashboard", href: "#", current: true },
-  { name: "Products", href: "#", current: false },
-  { name: "Recommendations", href: "#", current: false },
-  { name: "Cart", href: "#", current: false },
+  { name: "Products", href: "/search", current: false },
 ];
 
 function classNames(...classes: string[]) {
@@ -45,16 +44,13 @@ function classNames(...classes: string[]) {
 
 const Header = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const { setSearchResults } = useChatStore();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userProfile, setUserProfile] = useState<{
-    name?: string;
-    email?: string;
-    picture?: string;
-  }>({});
+  const { setSearchResults, userData, clearUserData, clearUserToken, clearMessages, clearSearch, setIsLoggedIn, isLoggedIn} = useChatStore();
+  //let isLoggedIn = !!userData; // Check if the user is logged in
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [isTermsChecked, setIsTermsChecked] = useState(false);
+
+  const { userToken } = useChatStore();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,8 +115,12 @@ const Header = () => {
   };
 
   const handleSignOut = () => {
+    clearUserData();
+    clearUserToken();
+    clearMessages();
+    clearSearch();
     setIsLoggedIn(false);
-    setUserProfile({});
+    
   };
 
   return (
@@ -149,18 +149,20 @@ const Header = () => {
 
             {/* Logo and text section */}
             <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-              {/* <div className="flex shrink-0 items-center">
-                <Image
-                  width={100}
-                  height={100}
-                  alt="Maguida logo"
-                  src="assets/app_logo.svg"
-                  className="h-8 w-auto"
-                />
-                <span className="ml-2 text-gray-900 font-semibold">
-                  Maguida
-                </span>
-              </div> */}
+              {!userToken && (
+                <div className="flex shrink-0 items-center">
+                  <Image
+                    width={100}
+                    height={100}
+                    alt="Maguida logo"
+                    src="assets/app_logo.svg"
+                    className="h-8 w-auto"
+                  />
+                  <span className="ml-2 text-gray-900 font-semibold">
+                    Maguida
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Search Bar */}
@@ -211,19 +213,24 @@ const Header = () => {
 
                   {/* Profile dropdown */}
                   <Menu as="div" className="relative ml-3">
-                    <div>
-                      <MenuButton className="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
-                        <span className="absolute -inset-1.5" />
-                        <span className="sr-only">Open user menu</span>
-                        <Image
-                          width={100}
-                          height={100}
-                          alt="Profile Picture"
-                          src={
-                            userProfile.picture || "assets/profile_picture.svg"
-                          }
-                          className="size-8 rounded-full"
-                        />
+                    <div className="flex items-center">
+                      <MenuButton className="relative flex items-center rounded-full bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+                        {/* Profile Picture */}
+                        {userData?.profilePicture ? (
+                          <Image
+                            width={36}
+                            height={36}
+                            alt="Profile Picture"
+                            src={userData?.profilePicture || userData?.firstname?.charAt(0).toUpperCase() || "?"}
+                            className="h-9 w-9 rounded-full"
+                          />
+                        ) : (
+                          <UserCircleIcon className="h-9 w-9 text-gray-400 bg-gray-200 rounded-full" />
+                        )}
+                        {/* User Name */}
+                        <span className="ml-2 mr-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {userData?.firstname}
+                        </span>
                       </MenuButton>
                     </div>
                     <MenuItems
@@ -350,9 +357,7 @@ const Header = () => {
                 onClick={() => {
                   if (isTermsChecked) {
                     setShowModal(false);
-                    
                   }
-                  
                 }}
                 disabled={!isTermsChecked}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

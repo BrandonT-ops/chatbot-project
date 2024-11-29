@@ -1,11 +1,13 @@
 "use client";
 import { useChatStore } from "@/lib/store";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const GoogleSignIn: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [isTermsChecked, setIsTermsChecked] = useState(false);
-  const { setUserToken } = useChatStore();
+  const { setUserToken, setUserData, setIsLoggedIn } = useChatStore();
+  const router = useRouter();
 
   useEffect(() => {
     // Load the Google script
@@ -42,8 +44,8 @@ const GoogleSignIn: React.FC = () => {
   const handleCredentialResponse = (
     response: google.accounts.id.CredentialResponse
   ) => {
-   // console.log("Encoded JWT ID token: ", response.credential);
-
+    console.log("Encoded JWT ID token: ", response.credential);
+    
     // Send the token to the backend
     fetch("https://maguida.raia.cm/auth/google/login/", {
       method: "POST",
@@ -54,16 +56,48 @@ const GoogleSignIn: React.FC = () => {
     })
       .then((res) => res.json())
       .then((data) => {
-       // console.log("User authenticated:", data);
+        console.log("User authenticated:", data);
         //storing it in the Zustand store
         setUserToken({
-          key: data.key
-        })
-        // Add logic to redirect or store user data
+          key: data.key,
+          google_token: response.credential, 
+        });
+        setIsLoggedIn(true);
+        
+        
+        // page refresh
+        router.refresh();
       })
       .catch((error) => {
         console.error("Error during authentication:", error);
       });
+
+
+      fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${response.credential}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("User Data acquired:", data);
+          //storing it in the Zustand store
+          setUserData({
+            userId: data.sub, // Assuming `sub` is the unique user ID provided by Google
+            firstname: data.given_name,
+            lastname: data.family_name,
+            email: data.email,
+            profilePicture: data.picture, 
+          });
+          
+          // page refresh
+          router.refresh();
+        })
+        .catch((error) => {
+          console.error("Error during authentication:", error);
+        });
+
   };
 
   const handleAcceptAndContinue = () => {
