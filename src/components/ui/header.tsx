@@ -44,7 +44,7 @@ function classNames(...classes: string[]) {
 
 const Header = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const { setSearchResults, userData, clearUserData, clearUserToken, clearMessages, clearSearch, setIsLoggedIn, isLoggedIn} = useChatStore();
+  const { setSearchResults,clearConversationMessages, userData, clearUserData, clearUserToken, clearMessages, clearSearch, setIsLoggedIn, isLoggedIn} = useChatStore();
   //let isLoggedIn = !!userData; // Check if the user is logged in
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
@@ -120,6 +120,7 @@ const Header = () => {
     clearMessages();
     clearSearch();
     setIsLoggedIn(false);
+    clearConversationMessages();
     
   };
 

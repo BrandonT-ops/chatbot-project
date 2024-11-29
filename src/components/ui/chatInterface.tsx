@@ -384,7 +384,7 @@ const ChatInterface: React.FC = () => {
                 </>
               ) : (
                 <div className="text-center text-gray-500 py-4">
-                  Loading ...
+                  {/* Loading ... */}
                 </div>
               )}
               
