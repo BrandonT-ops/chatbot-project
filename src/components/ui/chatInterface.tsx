@@ -7,7 +7,7 @@ import {
   PaperClipIcon,
   DocumentIcon,
   XMarkIcon,
-  TrashIcon,
+  //TrashIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -29,7 +29,7 @@ const ChatInterface: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { messages, addMessage, clearMessages } = useChatStore();
+  const { messages, addMessage } = useChatStore();
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
@@ -195,9 +195,9 @@ const ChatInterface: React.FC = () => {
     );
   };
 
-  const handleClearChat = () => {
-    clearMessages();
-  };
+  // const handleClearChat = () => {
+  //   clearMessages();
+  // };
 
   return (
     <motion.div
@@ -208,6 +208,7 @@ const ChatInterface: React.FC = () => {
     >
       <div className="w-full max-w-5xl mx-auto flex-grow flex flex-col mt-8">
         {/* Container with centered content */}
+
         <div className="flex-grow bg-white rounded-lg p-6 flex flex-col">
           {/* Title */}
           <motion.h1
@@ -416,23 +417,24 @@ const ChatInterface: React.FC = () => {
               {/* File upload button */}
               <button
                 onClick={triggerFileInput}
+                disabled
                 className="bg-gray-200 p-3 rounded-lg hover:bg-gray-300 transition"
               >
                 <PaperClipIcon className="h-5 w-5 text-gray-700" />
               </button>
 
-              {/* Clear Chat button */}
+              {/* Clear Chat button
               <button
                 onClick={handleClearChat}
                 className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition flex items-center"
               >
                 <TrashIcon className="h-5 w-5" />
-              </button>
+              </button> */}
 
               {/* Send button */}
               <button
                 onClick={handleSendMessage}
-                className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition flex items-center"
+                className="bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition flex items-center"
               >
                 <PaperAirplaneIcon className="h-5 w-5 mr-0 sm:mr-2" />
                 <span className="hidden sm:inline">Send</span>
@@ -442,7 +444,10 @@ const ChatInterface: React.FC = () => {
             <div className="text-center text-gray-500 py-4 mt-4 text-xs">
               © {new Date().getFullYear()} Richenel&apos;s AI Agency. All rights
               reserved.{" "}
-              <Link href="/conditions" className="text-blue-500 hover:underline">
+              <Link
+                href="/conditions"
+                className="text-gray-900 hover:underline"
+              >
                 Terms and Conditions
               </Link>
             </div>

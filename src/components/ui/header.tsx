@@ -23,7 +23,6 @@ import { useChatStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import GoogleSignIn from "./googlesignin";
 
-
 // Define the OAuth configuration
 // const OAUTH_CONFIG = {
 //   CLIENT_ID: "508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com",
@@ -56,55 +55,6 @@ const Header = () => {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [isTermsChecked, setIsTermsChecked] = useState(false);
-
-
-
-  // Check for authorization code on component mount
-  // useEffect(() => {
-  //   const urlParams = new URLSearchParams(window.location.search);
-  //   const authCode = urlParams.get('code');
-
-  //   if (authCode) {
-  //     // Remove the code from the URL to prevent repeated exchanges
-  //     window.history.replaceState({}, document.title, window.location.pathname);
-
-  //     // Exchange the authorization code
-  //     const exchangeAuthorizationCode = async () => {
-  //       try {
-  //         const response = await fetch(OAUTH_CONFIG.TOKEN_ENDPOINT, {
-  //           method: 'POST',
-  //           headers: {
-  //             'Content-Type': 'application/json',
-  //             'Accept': 'application/json'
-  //           },
-  //           body: JSON.stringify({ code: authCode })
-  //         });
-
-  //         if (!response.ok) {
-  //           throw new Error('Failed to exchange authorization code');
-  //         }
-
-  //         const data = await response.json();
-
-  //         // Assuming the response contains user profile information
-  //         setUserProfile({
-  //           name: data.name,
-  //           email: data.email,
-  //           picture: data.picture
-  //         });
-  //         setIsLoggedIn(true);
-
-  //         // Optional: Redirect to a default page after successful login
-  //         router.push('/chat');
-  //       } catch (error) {
-  //         console.error('OAuth login error:', error);
-  //         alert('Login failed');
-  //       }
-  //     };
-
-  //     exchangeAuthorizationCode();
-  //   }
-  // }, []);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -199,7 +149,7 @@ const Header = () => {
 
             {/* Logo and text section */}
             <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-              <div className="flex shrink-0 items-center">
+              {/* <div className="flex shrink-0 items-center">
                 <Image
                   width={100}
                   height={100}
@@ -210,7 +160,7 @@ const Header = () => {
                 <span className="ml-2 text-gray-900 font-semibold">
                   Maguida
                 </span>
-              </div>
+              </div> */}
             </div>
 
             {/* Search Bar */}
@@ -292,24 +242,9 @@ const Header = () => {
                   </Menu>
                 </>
               ) : (
-                <GoogleSignIn />
-              //   <div
-              //   id="g_id_onload"
-              //   data-client_id="508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com"
-              //   data-login_uri="http://localhost:3000"
-              //   data-auto_prompt="false"
-              // >
-              //   <div
-              //     className="g_id_signin block w-full sm:w-auto sm:h-auto sm:overflow-visible sm:text-base w-12 h-12 overflow-hidden text-transparent"
-              //     data-type="standard"
-              //     data-size="large"
-              //     data-theme="outline"
-              //     data-text="sign_in_with"
-              //     data-shape="rectangular"
-              //     data-logo_alignment="left"
-              //     onClick={() => console.log("Google Sign-In button clicked!")}
-              //   />
-              // </div>
+                <div>
+                  <GoogleSignIn />
+                </div>
               )}
             </div>
           </div>
@@ -415,8 +350,9 @@ const Header = () => {
                 onClick={() => {
                   if (isTermsChecked) {
                     setShowModal(false);
-                    //triggerGoogleLogin();
+                    
                   }
+                  
                 }}
                 disabled={!isTermsChecked}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

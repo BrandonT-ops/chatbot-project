@@ -10,6 +10,31 @@ export type MessageType = {
   metadata?: Record<string, unknown>;
 };
 
+//for usage through out the app
+export type UserToken ={
+  key: string;
+}
+
+// Add a new type for user authentication data
+export interface UserAuthData {
+  userId?: string;
+  email?: string;
+  name?: string;
+  profilePicture?: string;
+}
+
+// Define types for conversation and message data
+export interface Conversation {
+  id: string;
+  create_at: string;
+  title: string;
+}
+
+export interface ConversationMessage {
+  content: string;
+  is_user: boolean;
+}
+
 export type FileMetadata = {
   name: string;
   type: string;
@@ -33,27 +58,58 @@ export interface SearchResultType {
   isLoading?: boolean; // Add loading state
 }
 
+
+
+// Define the state interface
 interface ChatStore {
   messages: MessageType[];
   addMessage: (message: MessageType) => void;
   updateMessage: (id: string, updates: Partial<MessageType>) => void;
   clearMessages: () => void;
 
-  // Separate search-related states
+ // getUserToken: () => UserToken
+
   searchResults: SearchResultType | null;
   setSearchResults: (results: SearchResultType | null) => void;
   setSearchLoading: (isLoading: boolean) => void;
+
+  conversations: Conversation[];
+  setConversations: (conversations: Conversation[]) => void;
+
+  conversationMessages: ConversationMessage[];
+  setConversationMessages: (messages: ConversationMessage[]) => void;
+
+  fetchConversations: (token: string) => Promise<void>;
+  fetchConversationMessages: (conversationId: string, token: string) => Promise<void>;
+  createConversation: (message: string, token: string) => Promise<Conversation | void>;
+  addMessageToConversation: (
+    conversationId: string,
+    message: string,
+    token: string
+  ) => Promise<void>;
+
+
+   // New authentication-related state and methods
+   userAuth: UserAuthData | null;
+   setUserAuth: (authData: UserAuthData | null) => void;
+   clearUserAuth: () => void;
+
+   userToken: UserToken | null;
+   setUserToken: (userToken: UserToken | null ) => void;
+   clearUserToken: () => void;
+   
 }
+
 
 export const useChatStore = create<ChatStore>()(
   persist(
     (set) => ({
       messages: [],
-      addMessage: (message) =>
+      addMessage: (message: MessageType) =>
         set((state) => ({
           messages: [...state.messages, { ...message, id: Date.now().toString() }],
         })),
-      updateMessage: (id, updates) =>
+      updateMessage: (id: string, updates: Partial<MessageType>) =>
         set((state) => ({
           messages: state.messages.map((msg) =>
             msg.id === id ? { ...msg, ...updates } : msg
@@ -61,21 +117,112 @@ export const useChatStore = create<ChatStore>()(
         })),
       clearMessages: () => set({ messages: [] }),
 
-      // Updated search-related methods
+      userAuth: null,
+      setUserAuth: (authData: UserAuthData | null) => set({ userAuth: authData }),
+      clearUserAuth: () => set({ userAuth: null }),
+
+      userToken: null,
+      setUserToken: (userToken: UserToken | null) => set({ userToken: userToken}),
+      clearUserToken: () => set({ userToken: null}),
+
       searchResults: null,
-      setSearchResults: (results) => set({ searchResults: results }),
-      setSearchLoading: (isLoading) =>
+      setSearchResults: (results: SearchResultType | null) => set({ searchResults: results }),
+      setSearchLoading: (isLoading: boolean) =>
         set((state) => ({
           searchResults: state.searchResults
             ? { ...state.searchResults, isLoading }
             : { query: '', results: [], isLoading },
         })),
+
+      conversations: [],
+      setConversations: (conversations: Conversation[]) => set({ conversations }),
+
+      conversationMessages: [],
+      setConversationMessages: (messages: ConversationMessage[]) =>
+        set({ conversationMessages: messages }),
+
+      fetchConversations: async (token: string) => {
+        try {
+          const response = await fetch('https://maguida.raia.cm/chatbot/chat/', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data: Conversation[] = await response.json();
+          set({ conversations: data });
+        } catch (error) {
+          console.error('Error fetching conversations:', error);
+        }
+      },
+
+      fetchConversationMessages: async (conversationId: string, token: string) => {
+        try {
+          const response = await fetch(
+            `https://maguida.raia.cm/chatbot/chat/${conversationId}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          const data: ConversationMessage[] = await response.json();
+          set({ conversationMessages: data });
+        } catch (error) {
+          console.error('Error fetching conversation messages:', error);
+        }
+      },
+
+      createConversation: async (message: string, token: string) => {
+        try {
+          const response = await fetch('https://maguida.raia.cm/chatbot/chat/', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message }),
+          });
+          const data: Conversation = await response.json();
+          set((state) => ({
+            conversations: [...state.conversations, data],
+          }));
+          return data; // Return the created conversation
+        } catch (error) {
+          console.error('Error creating conversation:', error);
+        }
+      },
+
+      addMessageToConversation: async (
+        conversationId: string,
+        message: string,
+        token: string
+      ) => {
+        try {
+          const response = await fetch(
+            `https://maguida.raia.cm/chatbot/chat/${conversationId}`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ message }),
+            }
+          );
+          const data: ConversationMessage = await response.json();
+          set((state) => ({
+            conversationMessages: [...state.conversationMessages, data],
+          }));
+        } catch (error) {
+          console.error('Error adding message to conversation:', error);
+        }
+      },
     }),
     {
-      name: 'chat-storage', // Name of the item in localStorage/sessionStorage
+      name: 'chat-storage',
       partialize: (state) => ({
         messages: state.messages,
         searchResults: state.searchResults,
+        conversations: state.conversations,
+        conversationMessages: state.conversationMessages,
+        userAuth: state.userAuth,
+        userToken: state.userToken,
       }),
     }
   )
