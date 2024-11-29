@@ -16,7 +16,7 @@ import { useChatStore } from "@/lib/store";
 const SideBar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [conversations, setConversations] = useState([
+  const [conversations, ] = useState([
     { id: 1, title: "React Project Discussion" },
     { id: 2, title: "Design System Review" },
     { id: 3, title: "Performance Optimization" },
@@ -24,6 +24,13 @@ const SideBar = () => {
   const [visibleConversations, setVisibleConversations] = useState(5);
 
   const { clearUserToken, clearMessages, clearSearch, clearUserData, setIsLoggedIn } = useChatStore();
+  const { 
+  // addMessageToConversation, 
+    //createConversation, 
+   // userToken,
+    clearConversationMessages,
+  //  fetchConversationMessages 
+  } = useChatStore();
 
 
   const handleLogout = () => {
@@ -64,22 +71,36 @@ const SideBar = () => {
     setIsOpen(!isOpen);
   };
 
-  const addNewConversation = () => {
-    const newConversationId = conversations.length + 1;
-    setConversations([
-      ...conversations,
-      {
-        id: newConversationId,
-        title: `New Conversation ${newConversationId}`,
-      },
-    ]);
+  const addNewConversation = async () => {
+    try {
+
+      clearMessages();
+      clearConversationMessages();
+     // handleSelectConversation(newConversation.id);
+      // Call the `createConversation` function from the store to create a new conversation
+      // const newConversation = await createConversation("New conversation", userToken!.key);
+  
+      // if (newConversation) {
+      //   // Add the new conversation locally to the state
+      //   // setConversations((prevConversations) => [
+      //   //   ...prevConversations,
+      //   //   { id: newConversation.id, title: newConversation.title },
+      //   // ]);
+  
+      //   // // Load the default page of ChatInterface for the new conversation
+       // handleSelectConversation(newConversation.id); // Trigger loading the chat interface for the new conversation
+      // }
+    } catch (error) {
+      console.error("Error creating new conversation:", error);
+    }
   };
+  
 
   // const handleSelectConversation = async (conversationId: string) => {
-  //  // clearMessages();
-  //   // if (token) {
-  //   //   await fetchConversationMessages(conversationId, token);
-  //   // }
+  //  clearMessages();
+  //   if (userToken) {
+  //     await fetchConversationMessages(conversationId, userToken!.key);
+  //   }
   // };
 
   const handleSeeMore = () => {

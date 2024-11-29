@@ -30,6 +30,11 @@ const ChatInterface: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { messages, addMessage } = useChatStore();
+  // const { 
+  //   addMessageToConversation, 
+  //   createConversation, 
+  //   fetchConversationMessages 
+  // } = useChatStore();
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
@@ -72,7 +77,7 @@ const ChatInterface: React.FC = () => {
   };
 
   const handleSendMessage = useCallback(async () => {
-    if (!input.trim() && pendingFiles.length === 0) return;
+    if (!input.trim()) return;
 
     // Prepare file metadata
     const fileMetadata: FileMetadata[] = pendingFiles.map((file) => ({
@@ -91,6 +96,7 @@ const ChatInterface: React.FC = () => {
     };
 
     addMessage(userMessage);
+    
     setIsTyping(true);
     setError(null);
 
@@ -101,13 +107,15 @@ const ChatInterface: React.FC = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
+          // If messages is null, use an empty array, otherwise spread the existing messages
+          messages: messages ? [...messages, userMessage] : [userMessage],
           metadata: {
             fileCount: pendingFiles.length,
             inputLength: input.length,
           },
         }),
       });
+      
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -251,7 +259,7 @@ const ChatInterface: React.FC = () => {
             </motion.div>
 
             {/* Existing Messages */}
-            {messages.map((msg, index) => (
+            {messages!.map((msg, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: -20 }}

@@ -67,9 +67,17 @@ interface ChatStore {
   //login state
   isLoggedIn: boolean;
   setIsLoggedIn: (status: boolean) => void;
+  
+  // first message
+  firstMessage: string | null;
+  setFirstMessage: (first_message: string | null) => void;
+
+  // Start State
+  isStartState: boolean;
+  setIsStartState: (state: boolean) => void;
 
 
-  messages: MessageType[];
+  messages: MessageType[] | null;
   addMessage: (message: MessageType) => void;
   updateMessage: (id: string, updates: Partial<MessageType>) => void;
   clearMessages: () => void;
@@ -81,10 +89,10 @@ interface ChatStore {
   setSearchLoading: (isLoading: boolean) => void;
   clearSearch: () => void;
 
-  conversations: Conversation[];
+  conversations: Conversation[] | null;
   setConversations: (conversations: Conversation[]) => void;
 
-  conversationMessages: ConversationMessage[];
+  conversationMessages: ConversationMessage[] | null;
   setConversationMessages: (messages: ConversationMessage[]) => void;
 
   fetchConversations: (token: string) => Promise<void>;
@@ -95,6 +103,8 @@ interface ChatStore {
     message: string,
     token: string
   ) => Promise<void>;
+
+  clearConversationMessages: () => void;
 
 
    // New authentication-related state and methods
@@ -112,14 +122,22 @@ interface ChatStore {
 export const useChatStore = create<ChatStore>()(
   persist(
     (set) => ({
+
+      isStartState: true,
+      setIsStartState: (isStartState) => set({ isStartState: isStartState }),
+
+      firstMessage: null,
+      setFirstMessage: (firstMessage) => set({ firstMessage }),
+
+
       messages: [],
       addMessage: (message: MessageType) =>
         set((state) => ({
-          messages: [...state.messages, { ...message, id: Date.now().toString() }],
+          messages: state.messages ? [...state.messages, { ...message, id: Date.now().toString() }] : [{ ...message, id: Date.now().toString() }],
         })),
       updateMessage: (id: string, updates: Partial<MessageType>) =>
         set((state) => ({
-          messages: state.messages.map((msg) =>
+          messages: (state.messages || []).map((msg) =>
             msg.id === id ? { ...msg, ...updates } : msg
           ),
         })),
@@ -156,7 +174,7 @@ export const useChatStore = create<ChatStore>()(
       fetchConversations: async (token: string) => {
         try {
           const response = await fetch('https://maguida.raia.cm/chatbot/chat/', {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Token ${token}` },
           });
           const data: Conversation[] = await response.json();
           set({ conversations: data });
@@ -170,7 +188,7 @@ export const useChatStore = create<ChatStore>()(
           const response = await fetch(
             `https://maguida.raia.cm/chatbot/chat/${conversationId}`,
             {
-              headers: { Authorization: `Bearer ${token}` },
+              headers: { Authorization: `Token ${token}` },
             }
           );
           const data: ConversationMessage[] = await response.json();
@@ -185,14 +203,14 @@ export const useChatStore = create<ChatStore>()(
           const response = await fetch('https://maguida.raia.cm/chatbot/chat/', {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Token ${token}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ message }),
           });
           const data: Conversation = await response.json();
           set((state) => ({
-            conversations: [...state.conversations, data],
+            conversations: [...(state.conversations || []), data],
           }));
           return data; // Return the created conversation
         } catch (error) {
@@ -211,7 +229,7 @@ export const useChatStore = create<ChatStore>()(
             {
               method: 'POST',
               headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Token ${token}`,
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({ message }),
@@ -219,12 +237,15 @@ export const useChatStore = create<ChatStore>()(
           );
           const data: ConversationMessage = await response.json();
           set((state) => ({
-            conversationMessages: [...state.conversationMessages, data],
+            conversationMessages: [...(state.conversationMessages || []), data],
           }));
+          
         } catch (error) {
           console.error('Error adding message to conversation:', error);
         }
       },
+
+      clearConversationMessages: () => set({ conversationMessages: null}),
     }),
     {
       name: 'chat-storage',
@@ -236,6 +257,7 @@ export const useChatStore = create<ChatStore>()(
         userData: state.userData,
         userToken: state.userToken,
         isLoggedIn: state.isLoggedIn,
+        firstMessage: state.firstMessage,
       }),
     }
   )

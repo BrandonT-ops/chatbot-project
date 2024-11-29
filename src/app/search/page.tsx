@@ -88,7 +88,7 @@ const SearchResults = () => {
                 <div className="flex space-x-4">
                   <div className="flex-shrink-0 w-36 h-36">
                     <Image
-                      src={product.image_url || "/api/placeholder/200/200"}
+                      src={product.image_url}
                       alt={product.name}
                       width={144}
                       height={144}
