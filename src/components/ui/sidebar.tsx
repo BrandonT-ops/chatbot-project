@@ -16,22 +16,25 @@ import { useChatStore } from "@/lib/store";
 const SideBar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [conversations, ] = useState([
-    { id: 1, title: "React Project Discussion" },
-    { id: 2, title: "Design System Review" },
-    { id: 3, title: "Performance Optimization" },
-  ]);
   const [visibleConversations, setVisibleConversations] = useState(5);
 
-  const { clearUserToken, clearMessages, clearSearch, clearUserData, setIsLoggedIn } = useChatStore();
-  const { 
-  // addMessageToConversation, 
-    //createConversation, 
-   // userToken,
-    clearConversationMessages,
-  //  fetchConversationMessages 
+  const {
+    clearUserToken,
+    clearMessages,
+    clearSearch,
+    clearUserData,
+    setIsLoggedIn,
   } = useChatStore();
-
+  const {
+    // addMessageToConversation,
+    //createConversation,
+    userToken,
+    clearConversationMessages,
+    setIsStartState,
+    fetchConversations,
+    conversations,
+    fetchConversationMessages,
+  } = useChatStore();
 
   const handleLogout = () => {
     // Clear the authentication data in the store
@@ -39,8 +42,8 @@ const SideBar = () => {
     clearMessages();
     clearSearch();
     clearUserData();
-    setIsLoggedIn(false)
-    
+    setIsLoggedIn(false);
+
     // Optional: Add any additional logout logic, like:
     // - Redirecting to login page
     // - Clearing other app state
@@ -49,6 +52,7 @@ const SideBar = () => {
 
   // Check screen size and set mobile view
   useEffect(() => {
+    fetchConversations(userToken!.key);
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth <= 768);
       // Auto-close on mobile
@@ -73,35 +77,41 @@ const SideBar = () => {
 
   const addNewConversation = async () => {
     try {
-
+      setIsStartState(true);
       clearMessages();
       clearConversationMessages();
-     // handleSelectConversation(newConversation.id);
+
+      // handleSelectConversation(newConversation.id);
       // Call the `createConversation` function from the store to create a new conversation
       // const newConversation = await createConversation("New conversation", userToken!.key);
-  
+
       // if (newConversation) {
       //   // Add the new conversation locally to the state
       //   // setConversations((prevConversations) => [
       //   //   ...prevConversations,
       //   //   { id: newConversation.id, title: newConversation.title },
       //   // ]);
-  
+
       //   // // Load the default page of ChatInterface for the new conversation
-       // handleSelectConversation(newConversation.id); // Trigger loading the chat interface for the new conversation
+      // handleSelectConversation(newConversation.id); // Trigger loading the chat interface for the new conversation
       // }
     } catch (error) {
       console.error("Error creating new conversation:", error);
     }
   };
-  
 
-  // const handleSelectConversation = async (conversationId: string) => {
-  //  clearMessages();
-  //   if (userToken) {
-  //     await fetchConversationMessages(conversationId, userToken!.key);
-  //   }
-  // };
+  const handleSelectConversation = async (conversationId: string) => {
+    clearMessages();
+    clearConversationMessages();
+  
+    if (userToken) {
+      try {
+        fetchConversationMessages(conversationId, userToken.key);
+      } catch (error) {
+        console.error('Error fetching conversation messages:', error);
+      }
+    }
+  };
 
   const handleSeeMore = () => {
     setVisibleConversations((prev) => prev + 5);
@@ -185,11 +195,12 @@ const SideBar = () => {
               Recent Conversations
             </div>
           )}
-          {conversations.slice(0, visibleConversations).map((conversation) => (
-            <div
-              key={conversation.id}
-              // onClick={() => handleSelectConversation(conversation.id)}
-              className={`
+          {conversations && conversations.length > 0 ? (
+            conversations.slice(0, visibleConversations).map((conversation) => (
+              <div
+                key={conversation.id}
+                onClick={() => handleSelectConversation(conversation.id)}
+                className={`
                 p-3
                 hover:bg-gray-100
                 cursor-pointer
@@ -201,24 +212,34 @@ const SideBar = () => {
                 font-normal
                 ${!isOpen && "flex justify-center"}
               `}
-            >
+              >
+                {isOpen ? (
+                  <div className="flex items-center space-x-2">
+                    <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5 text-gray-600 flex-shrink-0" />
+                    <span className="text-sm font-normal truncate">
+                      {conversation.title}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5 mr-2" />
+                    <span>{conversation.title.slice(0, 0)}</span>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <>
               {isOpen ? (
-                 <div className="flex items-center">
-                 <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5 mr-2" />{" "}
-                {conversation.title}
+                <div className="p-3 text-gray-500 text-xs text-center">
+                  None yet, Start a new conversation!
                 </div>
-              ) : (
-                <div className="flex items-center">
-                  <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5 mr-2" />{" "}
-                  {/* Heroicon with margin-right */}
-                  <span>{conversation.title.slice(0, 0)}</span>
-                </div>
-              )}
-            </div>
-          ))}
+              ) : null}
+            </>
+          )}
 
           {/* See More */}
-          {conversations.length > visibleConversations && isOpen && (
+          {conversations!.length > visibleConversations && isOpen && (
             <button
               onClick={handleSeeMore}
               className="
@@ -233,7 +254,7 @@ const SideBar = () => {
               "
             >
               <EllipsisHorizontalIcon className="h-5 w-5 mr-2" />
-              See More Conversations
+              <span className="text-sm font-medium truncate">See more</span>
             </button>
           )}
         </div>
@@ -251,17 +272,17 @@ const SideBar = () => {
             <Cog6ToothIcon className="h-5 w-5" />
             {isOpen && <span className="ml-2">Settings</span>}
           </button> */}
-         <button
-      className={`
+          <button
+            className={`
         flex items-center p-2 hover:bg-gray-100 
         rounded-md text-gray-900 
         ${!isOpen && "justify-center"}
       `}
-      onClick={handleLogout}
-    >
-      <ArrowLeftOnRectangleIcon className="h-5 w-5" />
-      {isOpen && <span className="ml-2 font-semibold">Logout</span>}
-    </button>
+            onClick={handleLogout}
+          >
+            <ArrowLeftOnRectangleIcon className="h-5 w-5" />
+            {isOpen && <span className="ml-2 font-semibold">Logout</span>}
+          </button>
         </div>
       </div>
     </>

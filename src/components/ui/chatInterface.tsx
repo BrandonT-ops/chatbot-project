@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
-import { useChatStore, MessageType, FileMetadata } from "@/lib/store";
+import { useChatStore, MessageType, FileMetadata, ConversationMessage } from "@/lib/store";
 import {
   PaperAirplaneIcon,
   PaperClipIcon,
@@ -14,14 +14,14 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 
 // Define API response type
-interface APIResponse {
-  message?: {
-    content: string;
-    images?: string[];
-    metadata?: Record<string, unknown>;
-  };
-  error?: string;
-}
+// interface APIResponse {
+//   message?: {
+//     content: string;
+//     images?: string[];
+//     metadata?: Record<string, unknown>;
+//   };
+//   error?: string;
+// }
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState("");
@@ -29,12 +29,18 @@ const ChatInterface: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { messages, addMessage } = useChatStore();
-  // const { 
-  //   addMessageToConversation, 
-  //   createConversation, 
-  //   fetchConversationMessages 
-  // } = useChatStore();
+  const { addMessage, conversationMessages } = useChatStore();
+  const {
+    // addMessageToConversation,
+    createConversation,
+    // fetchConversationMessages,
+    userToken,
+    setIsStartState,
+    setFirstMessage,
+    firstMessage,
+    isStartState,
+    clearMessages,
+  } = useChatStore();
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
@@ -96,71 +102,95 @@ const ChatInterface: React.FC = () => {
     };
 
     addMessage(userMessage);
-    
+
+    // First Message Initialisation
+
     setIsTyping(true);
     setError(null);
 
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          // If messages is null, use an empty array, otherwise spread the existing messages
-          messages: messages ? [...messages, userMessage] : [userMessage],
-          metadata: {
-            fileCount: pendingFiles.length,
-            inputLength: input.length,
-          },
-        }),
-      });
-      
+    // try {
+    //   const response = await fetch("/api/chat", {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify({
+    //       // If messages is null, use an empty array, otherwise spread the existing messages
+    //       messages: messages ? [...messages, userMessage] : [userMessage],
+    //       metadata: {
+    //         fileCount: pendingFiles.length,
+    //         inputLength: input.length,
+    //       },
+    //     }),
+    //   });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+    //   if (!response.ok) {
+    //     throw new Error(`HTTP error! status: ${response.status}`);
+    //   }
 
-      const data: APIResponse = await response.json();
+    //   const data: APIResponse = await response.json();
 
-      if (data.error) {
-        throw new Error(data.error);
-      }
+    //   if (data.error) {
+    //     throw new Error(data.error);
+    //   }
 
-      if (data.message) {
-        const aiMessage: MessageType = {
-          role: "assistant",
-          content: data.message.content,
-          images: data.message.images || [],
-          metadata: data.message.metadata || {},
-        };
+    //   if (data.message) {
+    //     const aiMessage: MessageType = {
+    //       role: "assistant",
+    //       content: data.message.content,
+    //       images: data.message.images || [],
+    //       metadata: data.message.metadata || {},
+    //     };
 
-        addMessage(aiMessage);
-      }
+    //     addMessage(aiMessage);
+    //   }
 
-      // Reset input and files
-      setInput("");
-      setPendingFiles([]);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (error) {
-      console.error("Chat error:", error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred. Please try again."
-      );
-    } finally {
-      setIsTyping(false);
-    }
-  }, [input, pendingFiles, messages, addMessage]);
 
-  const renderMessageContent = (msg: MessageType) => {
+    //   if (isStartState) {
+    //     clearMessages();
+    //     setFirstMessage(input);
+    //     setIsStartState(false);
+        
+    //     createConversation(firstMessage!, userToken!.key);
+    //     // console.log(data);
+    //     //addMessageToConversation( data.conversationId ,input, userToken!.key);
+    //   }
+
+    //   // Reset input and files
+    //   setInput("");
+    //   setPendingFiles([]);
+    //   if (fileInputRef.current) fileInputRef.current.value = "";
+    // } catch (error) {
+    //   console.error("Chat error:", error);
+    //   setError(
+    //     error instanceof Error
+    //       ? error.message
+    //       : "An unexpected error occurred. Please try again."
+    //   );
+    // } finally {
+    //   setIsTyping(false);
+    // }
+  }, [
+    input,
+    pendingFiles,
+   // messages,
+    addMessage,
+    firstMessage,
+    setFirstMessage,
+    setIsStartState,
+    clearMessages,
+    createConversation,
+    isStartState,
+    userToken,
+  ]);
+
+  const renderMessageContent = (msg: ConversationMessage) => {
     return (
       <div className="space-y-2">
         {/* Text content */}
         {msg.content && <p className="text-gray-800 text-sm">{msg.content}</p>}
 
-        {/* Image preview */}
+        {/* Image preview
         {msg.images && msg.images.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {msg.images.map((img, index) => (
@@ -180,9 +210,9 @@ const ChatInterface: React.FC = () => {
               </motion.div>
             ))}
           </div>
-        )}
+        )} */}
 
-        {/* File attachments */}
+        {/* File attachments
         {msg.files && msg.files.length > 0 && (
           <div className="space-y-1">
             {msg.files.map((file, index) => (
@@ -198,7 +228,7 @@ const ChatInterface: React.FC = () => {
               </motion.div>
             ))}
           </div>
-        )}
+        )} */}
       </div>
     );
   };
@@ -230,90 +260,135 @@ const ChatInterface: React.FC = () => {
 
           {/* Chat Messages Container */}
           <div className="flex-grow overflow-y-auto mb-6 space-y-4 p-4 bg-white rounded-lg">
-            {/* Default AI Initial Message */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex items-start space-x-3"
-            >
-              <Image
-                width={100}
-                height={100}
-                alt="Pp"
-                src="assets/chat_icon.svg"
-                className="size-8 rounded-full"
-              />
-              <div className="bg-white px-1 rounded-lg flex-grow ">
-                <div className="flex items-center mb-2">
-                  <span className="font-semibold text-gray-800 mr-2">
-                    Maguida
-                  </span>
-                </div>
-                <p className="text-gray-600 text-sm text-justify max-w-4xl">
-                  Hi there! I&apos;m Maguida, your personal shopping assistant.
-                  I can help you find the perfect product! Just tell me what
-                  you&apos;re looking for.
-                </p>
-              </div>
-            </motion.div>
-
-            {/* Existing Messages */}
-            {messages!.map((msg, index) => (
-              <motion.div
-                key={index}
+            {/* {isStartState ? ( */}
+              {/* // Render only the Default AI Initial Message */}
+              {/* <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className={`flex ${
-                  msg.role === "user" ? "justify-start" : "justify-start"
-                }`}
+                className="flex items-start space-x-3"
               >
-                {msg.role === "user" ? (
-                  // User message
-                  <div className="flex items-start space-x-3 my-3">
-                    <Image
-                      width={100}
-                      height={100}
-                      alt="Pp"
-                      src="assets/profile_picture.svg"
-                      className="size-8 rounded-full"
-                    />
-                    <div className="bg-white px-1 rounded-lg flex-grow">
-                      <div className="flex items-center mb-2">
-                        <span className="font-semibold text-gray-800 mr-2">
-                          User
-                        </span>
-                      </div>
-                      <div className="text-gray-600 text-sm text-justify max-w-4xl">
-                        {renderMessageContent(msg)}
-                      </div>
-                    </div>
+                <Image
+                  width={100}
+                  height={100}
+                  alt="Pp"
+                  src="assets/chat_icon.svg"
+                  className="size-8 rounded-full"
+                />
+                <div className="bg-white px-1 rounded-lg flex-grow ">
+                  <div className="flex items-center mb-2">
+                    <span className="font-semibold text-gray-800 mr-2">
+                      Maguida
+                    </span>
                   </div>
-                ) : (
-                  // AI message
-                  <div className="flex items-start space-x-3">
-                    <Image
-                      width={100}
-                      height={100}
-                      alt="Maguida Chat Icon"
-                      src="assets/chat_icon.svg"
-                      className="size-8 rounded-full"
-                    />
-                    <div className="bg-white px-1 rounded-lg flex-grow">
-                      <div className="flex items-center mb-2">
-                        <span className="font-semibold text-gray-800 mr-2">
-                          Maguida
-                        </span>
-                      </div>
-                      <div className="text-gray-600 text-sm text-justify max-w-4xl">
-                        {renderMessageContent(msg)}
-                      </div>
+                  <p className="text-gray-600 text-sm text-justify max-w-4xl">
+                    Hi there! I&apos;m Maguida, your personal shopping
+                    assistant. I can help you find the perfect product! Just
+                    tell me what you&apos;re looking for.
+                    { }
+                  </p>
+                </div>
+              </motion.div> */}
+            {/* ) : ( */}
+              {/* // Render Default AI Message + Existing Messages */}
+             
+                {/* Default AI Initial Message */}
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="flex items-start space-x-3"
+                >
+                  <Image
+                    width={100}
+                    height={100}
+                    alt="Pp"
+                    src="assets/chat_icon.svg"
+                    className="size-8 rounded-full"
+                  />
+                  <div className="bg-white px-1 rounded-lg flex-grow ">
+                    <div className="flex items-center mb-2">
+                      <span className="font-semibold text-gray-800 mr-2">
+                        Maguida
+                      </span>
                     </div>
+                    <p className="text-gray-600 text-sm text-justify max-w-4xl">
+                      Hi there! I&apos;m Maguida, your personal shopping
+                      assistant. I can help you find the perfect product! Just
+                      tell me what you&apos;re looking for.
+                    </p>
                   </div>
-                )}
-              </motion.div>
-            ))}
+                </motion.div>
+
+                {/* Existing Messages */}
+                {conversationMessages && conversationMessages.length > 0 ? (
+                  <>
+                {conversationMessages!.map((msg, index) => (
+                  
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className={`flex ${
+                      msg.is_user ? "justify-start" : "justify-start"
+                    }`}
+                  >
+                    {msg.is_user ? (
+                      // User message
+                      <div className="flex items-start space-x-3 my-3">
+                        <Image
+                          width={100}
+                          height={100}
+                          alt="Pp"
+                          src="assets/profile_picture.svg"
+                          className="size-8 rounded-full"
+                        />
+                        <div className="bg-white px-1 rounded-lg flex-grow">
+                          <div className="flex items-center mb-2">
+                            <span className="font-semibold text-gray-800 mr-2">
+                              User
+                            </span>
+                          </div>
+                          <div className="text-gray-600 text-sm text-justify max-w-4xl">
+                             {renderMessageContent(msg)} 
+                            {/* {msg.content} */}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // AI message
+                      <div className="flex items-start space-x-3">
+                        <Image
+                          width={100}
+                          height={100}
+                          alt="Maguida Chat Icon"
+                          src="assets/chat_icon.svg"
+                          className="size-8 rounded-full"
+                        />
+                        <div className="bg-white px-1 rounded-lg flex-grow">
+                          <div className="flex items-center mb-2">
+                            <span className="font-semibold text-gray-800 mr-2">
+                              Maguida
+                            </span>
+                          </div>
+                          <div className="text-gray-600 text-sm text-justify max-w-4xl">
+                             {renderMessageContent(msg)}
+                            {/* {msg.content} */}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+                </>
+              ) : (
+                <div className="text-center text-gray-500 py-4">
+                  Loading ...
+                </div>
+              )}
+              
+            {/* )} */}
 
             {/* Typing Indicator */}
             {isTyping && (

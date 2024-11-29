@@ -28,7 +28,7 @@ export interface UserData {
 // Define types for conversation and message data
 export interface Conversation {
   id: string;
-  create_at: string;
+  created_at: string;
   title: string;
 }
 
@@ -178,6 +178,7 @@ export const useChatStore = create<ChatStore>()(
           });
           const data: Conversation[] = await response.json();
           set({ conversations: data });
+          //console.log(data);
         } catch (error) {
           console.error('Error fetching conversations:', error);
         }
@@ -193,12 +194,14 @@ export const useChatStore = create<ChatStore>()(
           );
           const data: ConversationMessage[] = await response.json();
           set({ conversationMessages: data });
+          console.log(data);
         } catch (error) {
           console.error('Error fetching conversation messages:', error);
         }
       },
 
       createConversation: async (message: string, token: string) => {
+        let parsedChunk;
         try {
           const response = await fetch('https://maguida.raia.cm/chatbot/chat/', {
             method: 'POST',
@@ -206,13 +209,55 @@ export const useChatStore = create<ChatStore>()(
               Authorization: `Token ${token}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ message }),
+            body: JSON.stringify({ "message" : message }),
           });
-          const data: Conversation = await response.json();
-          set((state) => ({
-            conversations: [...(state.conversations || []), data],
-          }));
-          return data; // Return the created conversation
+
+
+          if (!response.ok) {
+            throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+          }
+        
+          // Lire le corps de la réponse comme un flux
+          const reader = response.body?.getReader();
+        
+          if (reader) {
+            const decoder = new TextDecoder('utf-8');
+            let done = false;
+        
+            while (!done) {
+              const { value, done: readerDone } = await reader.read();
+              done = readerDone;
+        
+              if (value) {
+                const chunk = decoder.decode(value, { stream: true });
+                console.log('Chunk reçu:', chunk);
+        
+                // Si vous attendez du JSON dans le flux
+                try {
+                  parsedChunk = JSON.parse(chunk);
+                  console.log('Données JSON parsées:', parsedChunk);
+                } catch (e) {
+                  console.log('Données brutes:', e);
+                  
+                }
+              }
+            }
+        
+            console.log('Stream terminé.');
+          } else {
+            console.error('Pas de flux dans la réponse.');
+          }
+          
+          //console.log(response);
+
+          // const data: Conversation = await response.json();
+          //  console.log("data1");
+          //  console.log(data);
+          // console.log("data");
+          // set((state) => ({
+          //   conversations: [...(state.conversations || []), data],
+          // }));
+          return parsedChunk; // Return the created conversation
         } catch (error) {
           console.error('Error creating conversation:', error);
         }
