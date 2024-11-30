@@ -30,4 +30,4 @@ jobs:
 
     - name: Deploy to Server
       run: |
-        ssh -o StrictHostKeyChecking=no root@31.220.111.17	 'bash -s' < ./deploy.sh
+        ssh -o StrictHostKeyChecking=no root@46.202.141.24	 'bash -s' < ./deploy.sh
