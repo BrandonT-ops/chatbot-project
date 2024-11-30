@@ -75,31 +75,6 @@ const SideBar = () => {
     setIsOpen(!isOpen);
   };
 
-  const addNewConversation = async () => {
-    try {
-      setIsStartState(true);
-      clearMessages();
-      clearConversationMessages();
-
-      // handleSelectConversation(newConversation.id);
-      // Call the `createConversation` function from the store to create a new conversation
-      // const newConversation = await createConversation("New conversation", userToken!.key);
-
-      // if (newConversation) {
-      //   // Add the new conversation locally to the state
-      //   // setConversations((prevConversations) => [
-      //   //   ...prevConversations,
-      //   //   { id: newConversation.id, title: newConversation.title },
-      //   // ]);
-
-      //   // // Load the default page of ChatInterface for the new conversation
-      // handleSelectConversation(newConversation.id); // Trigger loading the chat interface for the new conversation
-      // }
-    } catch (error) {
-      console.error("Error creating new conversation:", error);
-    }
-  };
-
   const handleSelectConversation = async (conversationId: string) => {
     clearMessages();
     clearConversationMessages();
@@ -112,6 +87,17 @@ const SideBar = () => {
       }
     }
   };
+
+  const addNewConversation = async () => {
+    try {
+      setIsStartState(true);
+      clearMessages();
+      clearConversationMessages();
+    } catch (error) {
+      console.error("Error creating new conversation:", error);
+    }
+  };
+
 
   const handleSeeMore = () => {
     setVisibleConversations((prev) => prev + 5);

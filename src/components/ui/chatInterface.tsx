@@ -14,14 +14,14 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 
 // Define API response type
-// interface APIResponse {
-//   message?: {
-//     content: string;
-//     images?: string[];
-//     metadata?: Record<string, unknown>;
-//   };
-//   error?: string;
-// }
+interface APIResponse {
+  message?: {
+    content: string;
+    images?: string[];
+    metadata?: Record<string, unknown>;
+  };
+  error?: string;
+}
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState("");
@@ -108,69 +108,77 @@ const ChatInterface: React.FC = () => {
     setIsTyping(true);
     setError(null);
 
-    // try {
-    //   const response = await fetch("/api/chat", {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify({
-    //       // If messages is null, use an empty array, otherwise spread the existing messages
-    //       messages: messages ? [...messages, userMessage] : [userMessage],
-    //       metadata: {
-    //         fileCount: pendingFiles.length,
-    //         inputLength: input.length,
-    //       },
-    //     }),
-    //   });
+    if(isStartState){
+      createConversation(input, userToken!.key);
+      setIsStartState(false);
+    }
 
-    //   if (!response.ok) {
-    //     throw new Error(`HTTP error! status: ${response.status}`);
-    //   }
-
-    //   const data: APIResponse = await response.json();
-
-    //   if (data.error) {
-    //     throw new Error(data.error);
-    //   }
-
-    //   if (data.message) {
-    //     const aiMessage: MessageType = {
-    //       role: "assistant",
-    //       content: data.message.content,
-    //       images: data.message.images || [],
-    //       metadata: data.message.metadata || {},
-    //     };
-
-    //     addMessage(aiMessage);
-    //   }
-
-
-    //   if (isStartState) {
-    //     clearMessages();
-    //     setFirstMessage(input);
-    //     setIsStartState(false);
-        
-    //     createConversation(firstMessage!, userToken!.key);
-    //     // console.log(data);
-    //     //addMessageToConversation( data.conversationId ,input, userToken!.key);
-    //   }
-
-    //   // Reset input and files
-    //   setInput("");
-    //   setPendingFiles([]);
-    //   if (fileInputRef.current) fileInputRef.current.value = "";
-    // } catch (error) {
-    //   console.error("Chat error:", error);
-    //   setError(
-    //     error instanceof Error
-    //       ? error.message
-    //       : "An unexpected error occurred. Please try again."
-    //   );
-    // } finally {
-    //   setIsTyping(false);
-    // }
-  }, [
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          // Ensure `messages` defaults to an empty array if null or undefined
+          messages: messages ? [...messages, userMessage] : [userMessage],
+          metadata: {
+            fileCount: pendingFiles.length,
+            inputLength: input.length,
+          },
+        }),
+      });
+    
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+    
+      const data: APIResponse = await response.json();
+    
+      if (data.error) {
+        throw new Error(data.error);
+      }
+    
+      if (data.message) {
+        const aiMessage: MessageType = {
+          role: "assistant",
+          content: data.message.content,
+          images: data.message.images || [],
+          metadata: data.message.metadata || {},
+        };
+    
+        addMessage(aiMessage); // Add the assistant's response to the conversation
+      }
+    
+      if (isStartState) {
+        // Handle initial conversation state
+        clearMessages(); // Clear temporary messages
+        setFirstMessage(input); // Set the first user input as the conversation starter
+        setIsStartState(false); // Update state to mark the conversation as started
+    
+        // Create a new conversation using the first message
+        await createConversation(input, userToken!.key);
+      }
+    
+      // Reset input and pending files
+      setInput("");
+      setPendingFiles([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""; // Reset file input value
+      }
+    } catch (error) {
+      console.error("Chat error:", error);
+    
+      // Handle errors gracefully
+      setError(
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred. Please try again."
+      );
+    } finally {
+      setIsTyping(false); // Always set typing state to false when done
+    }
+    , [
     input,
     pendingFiles,
    // messages,

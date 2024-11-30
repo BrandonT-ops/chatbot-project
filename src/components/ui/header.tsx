@@ -24,14 +24,6 @@ import { useChatStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import GoogleSignIn from "./googlesignin";
 
-// Define the OAuth configuration
-// const OAUTH_CONFIG = {
-//   CLIENT_ID: "508045256314-mos8at9ampfv6ude20iv0udapi0j3efv.apps.googleusercontent.com",
-//   REDIRECT_URI: "https://maguida.cm",
-//   SCOPE: "openid email profile",
-//   AUTHORIZATION_ENDPOINT: "https://accounts.google.com/o/oauth2/v2/auth",
-//   TOKEN_ENDPOINT: "https://maguida.raia.cm/auth/google/login/"
-// };
 
 const navigation = [
   { name: "Dashboard", href: "#", current: true },
@@ -49,6 +41,7 @@ const Header = () => {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [isTermsChecked, setIsTermsChecked] = useState(false);
+  const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
   const { userToken } = useChatStore();
 
@@ -74,7 +67,7 @@ const Header = () => {
 
     try {
       const response = await fetch(
-        `https://maguida.raia.cm/shop/search/?query=${encodeURIComponent(
+        `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
           trimmedTerm
         )}`
       );

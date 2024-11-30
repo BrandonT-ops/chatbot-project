@@ -8,6 +8,7 @@ const GoogleSignIn: React.FC = () => {
   const [isTermsChecked, setIsTermsChecked] = useState(false);
   const { setUserToken, setUserData, setIsLoggedIn } = useChatStore();
   const router = useRouter();
+  const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
   useEffect(() => {
     // Load the Google script
@@ -47,7 +48,7 @@ const GoogleSignIn: React.FC = () => {
     console.log("Encoded JWT ID token: ", response.credential);
     
     // Send the token to the backend
-    fetch("https://maguida.raia.cm/auth/google/login/", {
+    fetch(`${apiEndpoint}/auth/google/login/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
