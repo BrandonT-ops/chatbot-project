@@ -108,6 +108,9 @@ const ChatInterface: React.FC = () => {
     setError(null);
 
     try {
+      // Start typing indicator
+      setIsTyping(true);
+  
       // API call for message response
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -115,57 +118,52 @@ const ChatInterface: React.FC = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: conversationMessages
-            ? [...conversationMessages, userMessage]
-            : [userMessage],
+          messages: conversationMessages ? [...conversationMessages, userMessage] : [userMessage],
           metadata: {
             fileCount: pendingFiles.length,
             inputLength: input.length,
           },
         }),
       });
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
+  
       const data: APIResponse = await response.json();
       console.log(data);
+  
       if (data.error) {
         throw new Error(data.error);
       }
-
+  
       const aiMessage: ConversationMessage = {
         is_user: false,
         content: data.message!.content,
       };
-
-      // If userToken exists, sync with backend
+  
+      // Sync with backend if userToken exists
       if (userToken?.key) {
-        // Create conversation if not exists
-        clearMessages();
         if (!conversation) {
           await createConversation(input, userToken.key);
         }
-        // Add messages to conversation
-        await addMessageToConversation(
-          conversation!.id,
-          input,
-          true,
-          userToken.key
-        );
-        await addMessageToConversation(
-          conversation!.id,
-          data.message!.content,
-          false,
-          userToken.key
-        );
+  
+        // Add user message to state and send API call to update backend
+        await addMessageToConversation(conversation!.id, input, true, userToken.key);
+  
+        // Add AI response to backend as well
+        await addMessageToConversation(conversation!.id, aiMessage.content, false, userToken.key);
       } else {
         addMessage(userMessage);
-        // Local addition of AI response
         addMessage(aiMessage);
       }
-    } finally {
+  
+      // Stop typing indicator after AI response
+      setIsTyping(false);
+    } catch (error) {
+      console.error("Error:", error);
+      setIsTyping(false); // Stop typing indicator on error
+    }  finally {
       // Reset input and pending files, and stop typing indicator
 
       setInput("");
@@ -184,7 +182,7 @@ const ChatInterface: React.FC = () => {
     addMessage,
     createConversation,
     userToken,
-    clearMessages,
+    //clearMessages,
     // isStartState,
     //  setIsStartState,
     //firstMessage

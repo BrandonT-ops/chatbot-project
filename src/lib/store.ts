@@ -279,6 +279,15 @@ export const useChatStore = create<ChatStore>()(
         token: string
       ) => {
         const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
+      
+        // Optimistically update the state immediately
+        set((state) => ({
+          conversationMessages: [
+            ...(state.conversationMessages || []),
+            { content: message, is_user: is_user },
+          ],
+        }));
+      
         try {
           const response = await fetch(
             `${apiEndpoint}/chatbot/chat/${conversationId}/`,
@@ -291,15 +300,22 @@ export const useChatStore = create<ChatStore>()(
               body: JSON.stringify({ message: message, is_user: is_user }),
             }
           );
+      
           const data: ConversationMessage = await response.json();
-          set((state) => ({
-            conversationMessages: [...(state.conversationMessages || []), data],
-          }));
+          console.log(data);
+          // Update the state again with the actual response data
+          // set((state) => ({
+          //   conversationMessages: [
+          //     ...(state.conversationMessages || []),
+          //     data,
+          //   ],
+          // }));
         } catch (error) {
           console.error("Error adding message to conversation:", error);
+          // Optionally handle the error state (e.g., revert optimistically added message)
         }
       },
-      // Add the `localAddMessage` method here
+      
 
       clearConversationMessages: () => set({ conversationMessages: null }),
     }),
