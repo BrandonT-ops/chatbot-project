@@ -36,10 +36,10 @@ const ChatInterface: React.FC = () => {
     // fetchConversationMessages,
     userToken,
     setIsStartState,
-    setFirstMessage,
-    firstMessage,
+   // setFirstMessage,
+   // firstMessage,
     isStartState,
-    clearMessages,
+  //  clearMessages,
   } = useChatStore();
 
   const triggerFileInput = () => {
@@ -83,14 +83,14 @@ const ChatInterface: React.FC = () => {
   };
 
   const handleSendMessage = useCallback(async () => {
-    if (!input.trim()) return;
-
+    if (!input.trim()) return; // Prevent sending empty messages
+  
     // Prepare file metadata
     const fileMetadata: FileMetadata[] = pendingFiles.map((file) => ({
       name: file.name,
       type: file.type,
     }));
-
+  
     // Create user message
     const userMessage: MessageType = {
       role: "user",
@@ -100,19 +100,25 @@ const ChatInterface: React.FC = () => {
         .filter((file) => file.type.startsWith("image/"))
         .map((file) => URL.createObjectURL(file)),
     };
-
+  
     addMessage(userMessage);
-
-    // First Message Initialisation
-
+  
     setIsTyping(true);
     setError(null);
-
-    if(isStartState){
-      createConversation(input, userToken!.key);
-      setIsStartState(false);
+  
+    // Initialize first message if this is the start of a conversation
+    if (isStartState) {
+      try {
+        await createConversation(input, userToken!.key); // Wait to ensure the conversation is created
+        setIsStartState(false); // Mark the start state as complete
+      } catch (error) {
+        console.error("Error creating conversation:", error);
+        setError("Failed to start a new conversation. Please try again.");
+        setIsTyping(false);
+        return;
+      }
     }
-
+  
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -120,25 +126,24 @@ const ChatInterface: React.FC = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          // Ensure `messages` defaults to an empty array if null or undefined
-          messages: messages ? [...messages, userMessage] : [userMessage],
+          messages: messages ? [...messages, userMessage] : [userMessage], // Default to an empty array if null
           metadata: {
             fileCount: pendingFiles.length,
             inputLength: input.length,
           },
         }),
       });
-    
+  
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-    
+  
       const data: APIResponse = await response.json();
-    
+  
       if (data.error) {
         throw new Error(data.error);
       }
-    
+  
       if (data.message) {
         const aiMessage: MessageType = {
           role: "assistant",
@@ -146,51 +151,37 @@ const ChatInterface: React.FC = () => {
           images: data.message.images || [],
           metadata: data.message.metadata || {},
         };
-    
-        addMessage(aiMessage); // Add the assistant's response to the conversation
-      }
-    
-      if (isStartState) {
-        // Handle initial conversation state
-        clearMessages(); // Clear temporary messages
-        setFirstMessage(input); // Set the first user input as the conversation starter
-        setIsStartState(false); // Update state to mark the conversation as started
-    
-        // Create a new conversation using the first message
-        await createConversation(input, userToken!.key);
-      }
-    
-      // Reset input and pending files
-      setInput("");
-      setPendingFiles([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Reset file input value
+  
+        addMessage(aiMessage);
       }
     } catch (error) {
       console.error("Chat error:", error);
-    
-      // Handle errors gracefully
+  
       setError(
         error instanceof Error
           ? error.message
           : "An unexpected error occurred. Please try again."
       );
     } finally {
-      setIsTyping(false); // Always set typing state to false when done
+      // Reset input and pending files, and stop typing indicator
+      setInput("");
+      setPendingFiles([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""; // Reset file input element
+      }
+      setIsTyping(false);
     }
-    , [
+  }, [
     input,
     pendingFiles,
    // messages,
     addMessage,
-    firstMessage,
-    setFirstMessage,
-    setIsStartState,
-    clearMessages,
     createConversation,
-    isStartState,
     userToken,
+    isStartState,
+    setIsStartState
   ]);
+  
 
   const renderMessageContent = (msg: ConversationMessage) => {
     return (
