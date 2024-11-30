@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 const GoogleSignIn: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [isTermsChecked, setIsTermsChecked] = useState(false);
-  const { setUserToken, setUserData, setIsLoggedIn, isLoggedIn } = useChatStore();
+  const { setUserToken, setUserData, setIsLoggedIn } = useChatStore();
   const router = useRouter();
   const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
@@ -63,10 +63,11 @@ const GoogleSignIn: React.FC = () => {
           key: data.key,
           google_token: response.credential, 
         });
-        console.log("now i suppose its false");
+       
         setIsLoggedIn(true);
-        console.log(isLoggedIn);
-        console.log("here i dont understand how it remains false");
+
+        
+       
         
         
         // page refresh

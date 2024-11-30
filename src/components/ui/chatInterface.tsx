@@ -4,6 +4,7 @@ import React, {
   useState,
   useRef,
   useCallback,
+  useEffect,
   //  useEffect
 } from "react";
 import {
@@ -48,11 +49,11 @@ const ChatInterface: React.FC = () => {
     userData,
     // fetchConversationMessages,
     userToken,
-    //setIsStartState,
-    // setFirstMessage,
-    // firstMessage,
-    // isStartState,
-    clearMessages,
+    setIsStartState,
+    setFirstMessage,
+     firstMessage,
+     isStartState,
+    // clearMessages,
   } = useChatStore();
 
   const triggerFileInput = () => {
@@ -106,6 +107,10 @@ const ChatInterface: React.FC = () => {
 
     setIsTyping(true);
     setError(null);
+    if(isStartState){
+      setFirstMessage(input);
+      setIsStartState(false);
+    }
 
     try {
       // Start typing indicator
@@ -144,9 +149,13 @@ const ChatInterface: React.FC = () => {
   
       // Sync with backend if userToken exists
       if (userToken?.key) {
-        if (!conversation) {
-          await createConversation(input, userToken.key);
+        if (!conversation && firstMessage) {
+          await createConversation(firstMessage, userToken.key);
+          setIsStartState(false);
         }
+        // else if(conversation && !isStartState){
+            
+        // }
   
         // Add user message to state and send API call to update backend
         await addMessageToConversation(conversation!.id, input, true, userToken.key);
@@ -182,10 +191,11 @@ const ChatInterface: React.FC = () => {
     addMessage,
     createConversation,
     userToken,
+    isStartState,
+    setIsStartState,
+    setFirstMessage,
     //clearMessages,
-    // isStartState,
-    //  setIsStartState,
-    //firstMessage
+    firstMessage
   ]);
 
   const renderMessageContent = (msg: ConversationMessage) => {
@@ -236,6 +246,39 @@ const ChatInterface: React.FC = () => {
       </div>
     );
   };
+
+  useEffect(() => {
+    const conversationId = conversation?.id; // Replace with actual conversation ID
+    const userTokening = userToken?.key; // Replace with the logged-in user's token
+  
+    if (userTokening) {
+      syncMessagesToBackend(conversationId ?? "", userToken.key);
+    }
+  }, []);
+
+  const syncMessagesToBackend = async (
+    conversationId: string ,
+    userToken: string
+  ) => {
+    const state = useChatStore.getState(); // Access the Zustand store state
+    const messages = state.conversationMessages || []; // Get stored messages
+  
+    for (const message of messages) {
+      try {
+        // Send each message to the backend
+        await state.addMessageToConversation(
+          conversationId,
+          message.content,
+          message.is_user,
+          userToken
+        );
+        console.log("Message synced:", message);
+      } catch (error) {
+        console.error("Error syncing message:", message, error);
+      }
+    }
+  };
+  
 
   // useEffect(() => {
   //   if (messageContainerRef.current) {
