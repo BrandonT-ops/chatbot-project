@@ -260,8 +260,13 @@ const ChatInterface: React.FC = () => {
     conversationId: string ,
     userToken: string
   ) => {
-    const state = useChatStore.getState(); // Access the Zustand store state
+    const state = useChatStore.getState(); 
     const messages = state.conversationMessages || []; // Get stored messages
+
+    if (state.hasSyncedMessages) {
+      console.log("Messages already synced.");
+      return;
+    }
   
     for (const message of messages) {
       try {
@@ -277,6 +282,7 @@ const ChatInterface: React.FC = () => {
         console.error("Error syncing message:", message, error);
       }
     }
+    state.setHasSyncedMessages(true);
   };
   
 

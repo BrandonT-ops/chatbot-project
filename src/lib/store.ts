@@ -71,6 +71,9 @@ interface ChatStore {
   isLoggedIn: boolean;
   setIsLoggedIn: (status: boolean) => void;
 
+  hasSyncedMessages: boolean;
+  setHasSyncedMessages: (status: boolean) => void;
+
   // first message
   firstMessage: string | null;
   setFirstMessage: (first_message: string | null) => void;
@@ -120,6 +123,8 @@ interface ChatStore {
 
   clearConversationMessages: () => void;
 
+  
+
   // New authentication-related state and methods
   userData: UserData | null;
   setUserData: (authData: UserData | null) => void;
@@ -133,6 +138,10 @@ interface ChatStore {
 export const useChatStore = create<ChatStore>()(
   persist(
     (set, get) => ({
+
+      hasSyncedMessages: false, // Flag to track if messages have been synced
+      setHasSyncedMessages: (value: boolean) => set({ hasSyncedMessages: value }),
+
       isStartState: true,
       setIsStartState: (isStartState) => set({ isStartState: isStartState }),
 
@@ -331,6 +340,7 @@ export const useChatStore = create<ChatStore>()(
         userToken: state.userToken,
         isLoggedIn: state.isLoggedIn,
         firstMessage: state.firstMessage,
+        hasSyncedMessages: state.hasSyncedMessages
       }),
     }
   )
