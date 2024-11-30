@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useCallback, 
-//  useEffect 
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  //  useEffect
 } from "react";
 import {
   useChatStore,
@@ -13,7 +16,6 @@ import {
   PaperClipIcon,
   DocumentIcon,
   XMarkIcon,
-  UserCircleIcon,
   UserIcon,
   //TrashIcon,
 } from "@heroicons/react/24/outline";
@@ -350,24 +352,32 @@ const ChatInterface: React.FC = () => {
                       // User message
                       <div className="flex items-start space-x-3 my-3">
                         {userData?.profilePicture ? (
-                          <Image
-                            width={100}
-                            height={100}
-                            alt="Profile Picture"
-                            src={
-                              userData?.profilePicture ||
-                              userData?.firstname?.charAt(0).toUpperCase() ||
-                              "?"
-                            }
-                            className="size-8 rounded-full"
-                          />
+                          <div className="relative">
+                            {userData?.profilePicture ? (
+                              <Image
+                                width={100}
+                                height={100}
+                                alt={
+                                  userData?.firstname
+                                    ? `${userData.firstname
+                                        .charAt(0)
+                                        .toUpperCase()}`
+                                    : "Profile Picture"
+                                }
+                                src={userData?.profilePicture}
+                                className="size-8 rounded-full object-cover"
+                              />
+                            ) : (
+                              <UserIcon className="size-8 p-1 text-gray-400 bg-gray-200 rounded-full" />
+                            )}
+                          </div>
                         ) : (
                           <UserIcon className="size-8 p-1 text-gray-400 bg-gray-200  rounded-full" />
                         )}
                         <div className="bg-white px-1 rounded-lg flex-grow">
                           <div className="flex items-center mb-2">
                             <span className="font-semibold text-gray-800 mr-2">
-                             {userData?.firstname || "User"}
+                              {userData?.firstname || "User"}
                             </span>
                           </div>
                           <div className="text-gray-600 text-sm text-justify max-w-4xl">
