@@ -1,14 +1,20 @@
 "use client";
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
-import { useChatStore, 
- // MessageType,
-   ConversationMessage } from "@/lib/store";
+import React, { useState, useRef, useCallback, 
+//  useEffect 
+} from "react";
+import {
+  useChatStore,
+  // MessageType,
+  ConversationMessage,
+} from "@/lib/store";
 import {
   PaperAirplaneIcon,
   PaperClipIcon,
   DocumentIcon,
   XMarkIcon,
+  UserCircleIcon,
+  UserIcon,
   //TrashIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
@@ -37,12 +43,13 @@ const ChatInterface: React.FC = () => {
     addMessageToConversation,
     createConversation,
     conversation,
+    userData,
     // fetchConversationMessages,
     userToken,
     //setIsStartState,
-   // setFirstMessage,
-   // firstMessage,
-   // isStartState,
+    // setFirstMessage,
+    // firstMessage,
+    // isStartState,
     clearMessages,
   } = useChatStore();
 
@@ -95,11 +102,9 @@ const ChatInterface: React.FC = () => {
       content: input,
     };
 
-    addMessage(userMessage);
     setIsTyping(true);
     setError(null);
-  
-  
+
     try {
       // API call for message response
       const response = await fetch("/api/chat", {
@@ -108,8 +113,8 @@ const ChatInterface: React.FC = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: conversationMessages 
-            ? [...conversationMessages, userMessage] 
+          messages: conversationMessages
+            ? [...conversationMessages, userMessage]
             : [userMessage],
           metadata: {
             fileCount: pendingFiles.length,
@@ -127,31 +132,40 @@ const ChatInterface: React.FC = () => {
       if (data.error) {
         throw new Error(data.error);
       }
-  
+
       const aiMessage: ConversationMessage = {
         is_user: false,
         content: data.message!.content,
       };
 
-      // Local addition of AI response
-      addMessage(aiMessage);
-  
       // If userToken exists, sync with backend
       if (userToken?.key) {
         // Create conversation if not exists
-        clearMessages()
+        clearMessages();
         if (!conversation) {
           await createConversation(input, userToken.key);
         }
-        
         // Add messages to conversation
-        await addMessageToConversation(conversation!.id, input, true, userToken.key);
-        await addMessageToConversation(conversation!.id, data.message!.content, false, userToken.key);
+        await addMessageToConversation(
+          conversation!.id,
+          input,
+          true,
+          userToken.key
+        );
+        await addMessageToConversation(
+          conversation!.id,
+          data.message!.content,
+          false,
+          userToken.key
+        );
+      } else {
+        addMessage(userMessage);
+        // Local addition of AI response
+        addMessage(aiMessage);
       }
-
     } finally {
       // Reset input and pending files, and stop typing indicator
-      
+
       setInput("");
       setPendingFiles([]);
       if (fileInputRef.current) {
@@ -169,8 +183,8 @@ const ChatInterface: React.FC = () => {
     createConversation,
     userToken,
     clearMessages,
-   // isStartState,
-  //  setIsStartState,
+    // isStartState,
+    //  setIsStartState,
     //firstMessage
   ]);
 
@@ -223,14 +237,14 @@ const ChatInterface: React.FC = () => {
     );
   };
 
-  useEffect(() => {
-    if (messageContainerRef.current) {
-      messageContainerRef.current.scrollTo({
-        top: messageContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  }, [conversationMessages]);
+  // useEffect(() => {
+  //   if (messageContainerRef.current) {
+  //     messageContainerRef.current.scrollTo({
+  //       top: messageContainerRef.current.scrollHeight,
+  //       behavior: "smooth",
+  //     });
+  //   }
+  // }, [conversationMessages]);
 
   return (
     <motion.div
@@ -254,12 +268,13 @@ const ChatInterface: React.FC = () => {
           </motion.h1>
 
           {/* Chat Messages Container */}
-          <div 
-          ref={messageContainerRef}
-          className="flex-grow overflow-y-auto mb-6 space-y-4 p-4 bg-white rounded-lg scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <div
+            ref={messageContainerRef}
+            className="flex-grow overflow-y-auto mb-6 space-y-4 p-4 bg-white rounded-lg scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+          >
             {/* {isStartState ? ( */}
-              {/* // Render only the Default AI Initial Message */}
-              {/* <motion.div
+            {/* // Render only the Default AI Initial Message */}
+            {/* <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -287,42 +302,41 @@ const ChatInterface: React.FC = () => {
                 </div>
               </motion.div> */}
             {/* ) : ( */}
-              {/* // Render Default AI Message + Existing Messages */}
-             
-                {/* Default AI Initial Message */}
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="flex items-start space-x-3"
-                >
-                  <Image
-                    width={100}
-                    height={100}
-                    alt="Pp"
-                    src="assets/chat_icon.svg"
-                    className="size-8 rounded-full"
-                  />
-                  <div className="bg-white px-1 rounded-lg flex-grow ">
-                    <div className="flex items-center mb-2">
-                      <span className="font-semibold text-gray-800 mr-2">
-                        Maguida
-                      </span>
-                    </div>
-                    <p className="text-gray-600 text-sm text-justify max-w-4xl">
-                      Hi there! I&apos;m Maguida, your personal shopping
-                      assistant. I can help you find the perfect product! Just
-                      tell me what you&apos;re looking for.
-                    </p>
-                  </div>
-                </motion.div>
+            {/* // Render Default AI Message + Existing Messages */}
 
-                {/* Existing Messages */}
+            {/* Default AI Initial Message */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex items-start space-x-3"
+            >
+              <Image
+                width={100}
+                height={100}
+                alt="Pp"
+                src="assets/chat_icon.svg"
+                className="size-8 rounded-full"
+              />
+              <div className="bg-white px-1 rounded-lg flex-grow ">
+                <div className="flex items-center mb-2">
+                  <span className="font-semibold text-gray-800 mr-2">
+                    Maguida
+                  </span>
+                </div>
+                <p className="text-gray-600 text-sm text-justify max-w-4xl">
+                  Hi there! I&apos;m Maguida, your personal shopping assistant.
+                  I can help you find the perfect product! Just tell me what
+                  you&apos;re looking for.
+                </p>
+              </div>
+            </motion.div>
 
-                {conversationMessages && conversationMessages.length > 0 ? (
-                  <>
+            {/* Existing Messages */}
+
+            {conversationMessages && conversationMessages.length > 0 ? (
+              <>
                 {conversationMessages!.map((msg, index) => (
-                  
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, y: -20 }}
@@ -335,21 +349,29 @@ const ChatInterface: React.FC = () => {
                     {msg.is_user ? (
                       // User message
                       <div className="flex items-start space-x-3 my-3">
-                        <Image
-                          width={100}
-                          height={100}
-                          alt="Pp"
-                          src="assets/profile_picture.svg"
-                          className="size-8 rounded-full"
-                        />
+                        {userData?.profilePicture ? (
+                          <Image
+                            width={100}
+                            height={100}
+                            alt="Profile Picture"
+                            src={
+                              userData?.profilePicture ||
+                              userData?.firstname?.charAt(0).toUpperCase() ||
+                              "?"
+                            }
+                            className="size-8 rounded-full"
+                          />
+                        ) : (
+                          <UserIcon className="size-8 p-1 text-gray-400 bg-gray-200  rounded-full" />
+                        )}
                         <div className="bg-white px-1 rounded-lg flex-grow">
                           <div className="flex items-center mb-2">
                             <span className="font-semibold text-gray-800 mr-2">
-                              User
+                             {userData?.firstname || "User"}
                             </span>
                           </div>
                           <div className="text-gray-600 text-sm text-justify max-w-4xl">
-                             {renderMessageContent(msg)} 
+                            {renderMessageContent(msg)}
                             {/* {msg.content} */}
                           </div>
                         </div>
@@ -371,7 +393,7 @@ const ChatInterface: React.FC = () => {
                             </span>
                           </div>
                           <div className="text-gray-600 text-sm text-justify max-w-4xl">
-                             {renderMessageContent(msg)}
+                            {renderMessageContent(msg)}
                             {/* {msg.content} */}
                           </div>
                         </div>
@@ -379,13 +401,13 @@ const ChatInterface: React.FC = () => {
                     )}
                   </motion.div>
                 ))}
-                </>
-              ) : (
-                <div className="text-center text-gray-500 py-4">
-                  {/* Loading ... */}
-                </div>
-              )}
-              
+              </>
+            ) : (
+              <div className="text-center text-gray-500 py-4">
+                {/* Loading ... */}
+              </div>
+            )}
+
             {/* )} */}
 
             {/* Typing Indicator */}

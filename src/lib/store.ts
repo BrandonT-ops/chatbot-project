@@ -2,8 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export type MessageType = {
-  is_user: boolean,
-  content: string
+  is_user: boolean;
+  content: string;
 };
 
 export type APIResponse = {
@@ -100,7 +100,7 @@ interface ChatStore {
   conversationMessages: ConversationMessage[] | null;
   setConversationMessages: (messages: ConversationMessage[]) => void;
 
-  fetchConversations: (token: string) => Promise<void>;
+  fetchConversations: (token: string | undefined) => Promise<void>;
   fetchConversationMessages: (
     conversationId: string,
     token: string
@@ -116,7 +116,7 @@ interface ChatStore {
     token: string
   ) => Promise<void>;
 
-  localAddMessage: (content: string, is_user: boolean) => void;
+  // localAddMessage: (content: string, is_user: boolean) => void;
 
   clearConversationMessages: () => void;
 
@@ -143,10 +143,21 @@ export const useChatStore = create<ChatStore>()(
       addMessage: (conversationMessage: ConversationMessage) =>
         set((state) => ({
           conversationMessages: state.conversationMessages
-            ? [...state.conversationMessages, { content: conversationMessage.content, is_user: conversationMessage.is_user }]
-            : [{ content: conversationMessage.content, is_user: conversationMessage.is_user }],
+            ? [
+                ...state.conversationMessages,
+                {
+                  content: conversationMessage.content,
+                  is_user: conversationMessage.is_user,
+                },
+              ]
+            : [
+                {
+                  content: conversationMessage.content,
+                  is_user: conversationMessage.is_user,
+                },
+              ],
         })),
-      
+
       clearMessages: () => set({ messages: [] }),
 
       isLoggedIn: false, // Default to false
@@ -195,7 +206,7 @@ export const useChatStore = create<ChatStore>()(
         return undefined;
       },
 
-      fetchConversations: async (token: string) => {
+      fetchConversations: async (token: string | undefined ) => {
         const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
         try {
           const response = await fetch(`${apiEndpoint}/chatbot/chat/`, {
@@ -289,15 +300,6 @@ export const useChatStore = create<ChatStore>()(
         }
       },
       // Add the `localAddMessage` method here
-      localAddMessage: (content: string, is_user: boolean) => {
-        const newMessage: ConversationMessage = { content, is_user };
-        set((state) => ({
-          conversationMessages: [
-            ...(state.conversationMessages || []),
-            newMessage,
-          ],
-        }));
-      },
 
       clearConversationMessages: () => set({ conversationMessages: null }),
     }),

@@ -53,7 +53,7 @@ const SideBar = () => {
 
   // Check screen size and set mobile view
   useEffect(() => {
-    fetchConversations(userToken!.key);
+    fetchConversations(userToken?.key);
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth <= 768);
       // Auto-close on mobile
@@ -70,7 +70,7 @@ const SideBar = () => {
 
     // Cleanup listener
     return () => window.removeEventListener("resize", checkScreenSize);
-  }, []);
+  }, [fetchConversations, userToken]);
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);

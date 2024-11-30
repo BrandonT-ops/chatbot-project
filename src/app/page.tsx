@@ -5,7 +5,7 @@ import SideBar from "@/components/ui/sidebar";
 import { useChatStore } from "@/lib/store";
 
 export default function Home() {
-  const {isLoggedIn} = useChatStore();
+    const {isLoggedIn} = useChatStore();
 
   return (
     <main className="min-h-screen bg-gray-50">
