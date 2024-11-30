@@ -250,13 +250,13 @@ export const useChatStore = create<ChatStore>()(
           }
   
           const data: Conversation = await response.json();
-         
+          console.log(data);
+ 
           set((state) => ({
+            firstMessage: message,
             conversations: [...(state.conversations || []), data],
-          }));
-          set(() => ({
-              firstMessage: message,
-          })); 
+            conversation: data,
+        })); 
           return data; 
         } catch (error) {
           console.error('Error creating conversation:', error);
@@ -272,14 +272,14 @@ export const useChatStore = create<ChatStore>()(
         const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
         try {
           const response = await fetch(
-            `${apiEndpoint}/chatbot/chat/${conversationId}`,
+            `${apiEndpoint}/chatbot/chat/${conversationId}/`,
             {
               method: 'POST',
               headers: {
                 Authorization: `Token ${token}`,
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ message: message, is_user: is_user }),
+              body: JSON.stringify({ "message": message, "is_user": is_user }),
             }
           );
           const data: ConversationMessage = await response.json();

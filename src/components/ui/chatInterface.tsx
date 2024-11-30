@@ -38,7 +38,7 @@ const ChatInterface: React.FC = () => {
     userToken,
     setIsStartState,
    // setFirstMessage,
-   // firstMessage,
+    firstMessage,
     isStartState,
   //  clearMessages,
   } = useChatStore();
@@ -102,6 +102,10 @@ const ChatInterface: React.FC = () => {
         .map((file) => URL.createObjectURL(file)),
     };
   
+    if (!conversation && userToken?.key && firstMessage) {
+      await createConversation(input, userToken.key);
+    }
+    console.log("here nigga");
     addMessageToConversation(conversation!.id, input, true, userToken!.key);
     addMessage(userMessage);
   
