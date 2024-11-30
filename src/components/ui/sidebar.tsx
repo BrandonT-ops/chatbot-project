@@ -24,6 +24,7 @@ const SideBar = () => {
     clearSearch,
     clearUserData,
     setIsLoggedIn,
+    setConversation
   } = useChatStore();
   const {
     // addMessageToConversation,
@@ -78,6 +79,8 @@ const SideBar = () => {
   const handleSelectConversation = async (conversationId: string) => {
     clearMessages();
     clearConversationMessages();
+
+    setConversation(conversationId);
   
     if (userToken) {
       try {

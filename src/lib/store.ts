@@ -74,7 +74,6 @@ export interface SearchResultType {
 // Define the state interface
 interface ChatStore {
 
-  
   //login state
   isLoggedIn: boolean;
   setIsLoggedIn: (status: boolean) => void;
@@ -100,6 +99,9 @@ interface ChatStore {
   setSearchLoading: (isLoading: boolean) => void;
   clearSearch: () => void;
 
+  conversation: Conversation | null
+  setConversation: (conversationId: string) => Conversation | undefined;
+
   conversations: Conversation[] | null;
   setConversations: (conversations: Conversation[]) => void;
 
@@ -112,6 +114,7 @@ interface ChatStore {
   addMessageToConversation: (
     conversationId: string,
     message: string,
+    is_user: boolean,
     token: string
   ) => Promise<void>;
 
@@ -133,7 +136,7 @@ interface ChatStore {
 export const useChatStore = create<ChatStore>()(
   
   persist(
-    (set) => ({
+    (set, get) => ({
 
       isStartState: true,
       setIsStartState: (isStartState) => set({ isStartState: isStartState }),
@@ -182,6 +185,21 @@ export const useChatStore = create<ChatStore>()(
       conversationMessages: [],
       setConversationMessages: (messages: ConversationMessage[]) =>
         set({ conversationMessages: messages }),
+
+      conversation: null,
+      setConversation: (conversationId: string) => {
+        const state = get();
+        const foundConversation = state.conversations?.find(
+          (conv) => conv.id === conversationId
+        );
+
+        if (foundConversation) {
+          set({ conversation: foundConversation });
+          return foundConversation;
+        }
+
+        return undefined;
+      },
 
       fetchConversations: async (token: string) => {
         const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
@@ -248,6 +266,7 @@ export const useChatStore = create<ChatStore>()(
       addMessageToConversation: async (
         conversationId: string,
         message: string,
+        is_user: boolean,
         token: string
       ) => {
         const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
@@ -260,7 +279,7 @@ export const useChatStore = create<ChatStore>()(
                 Authorization: `Token ${token}`,
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ message }),
+              body: JSON.stringify({ message: message, is_user: is_user }),
             }
           );
           const data: ConversationMessage = await response.json();
@@ -280,6 +299,7 @@ export const useChatStore = create<ChatStore>()(
       partialize: (state) => ({
         messages: state.messages,
         searchResults: state.searchResults,
+        conversation: state.conversation,
         conversations: state.conversations,
         conversationMessages: state.conversationMessages,
         userData: state.userData,

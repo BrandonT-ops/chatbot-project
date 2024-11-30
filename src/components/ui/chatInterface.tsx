@@ -31,8 +31,9 @@ const ChatInterface: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addMessage, conversationMessages } = useChatStore();
   const {
-    // addMessageToConversation,
+    addMessageToConversation,
     createConversation,
+    conversation,
     // fetchConversationMessages,
     userToken,
     setIsStartState,
@@ -101,6 +102,7 @@ const ChatInterface: React.FC = () => {
         .map((file) => URL.createObjectURL(file)),
     };
   
+    addMessageToConversation(conversation!.id, input, true, userToken!.key);
     addMessage(userMessage);
   
     setIsTyping(true);
@@ -126,7 +128,7 @@ const ChatInterface: React.FC = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: messages ? [...messages, userMessage] : [userMessage], // Default to an empty array if null
+          messages: conversationMessages ? [...conversationMessages, userMessage] : [userMessage], // Default to an empty array if null
           metadata: {
             fileCount: pendingFiles.length,
             inputLength: input.length,
@@ -138,22 +140,13 @@ const ChatInterface: React.FC = () => {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
   
-      const data: APIResponse = await response.json();
-  
+      const data: APIResponse = await response.json();  
+     
       if (data.error) {
         throw new Error(data.error);
       }
+      addMessageToConversation(conversation!.id, data.message!.content, false, userToken!.key);
   
-      if (data.message) {
-        const aiMessage: MessageType = {
-          role: "assistant",
-          content: data.message.content,
-          images: data.message.images || [],
-          metadata: data.message.metadata || {},
-        };
-  
-        addMessage(aiMessage);
-      }
     } catch (error) {
       console.error("Chat error:", error);
   
@@ -174,7 +167,9 @@ const ChatInterface: React.FC = () => {
   }, [
     input,
     pendingFiles,
-   // messages,
+    addMessageToConversation,
+    conversation,
+    conversationMessages,
     addMessage,
     createConversation,
     userToken,
@@ -231,10 +226,6 @@ const ChatInterface: React.FC = () => {
       </div>
     );
   };
-
-  // const handleClearChat = () => {
-  //   clearMessages();
-  // };
 
   return (
     <motion.div
