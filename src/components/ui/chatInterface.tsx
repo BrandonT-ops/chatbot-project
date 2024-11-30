@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
-import { useChatStore, MessageType, FileMetadata, ConversationMessage } from "@/lib/store";
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useChatStore, 
+ // MessageType,
+   ConversationMessage } from "@/lib/store";
 import {
   PaperAirplaneIcon,
   PaperClipIcon,
@@ -29,6 +31,7 @@ const ChatInterface: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messageContainerRef = useRef<HTMLDivElement | null>(null);
   const { addMessage, conversationMessages } = useChatStore();
   const {
     addMessageToConversation,
@@ -36,11 +39,11 @@ const ChatInterface: React.FC = () => {
     conversation,
     // fetchConversationMessages,
     userToken,
-    setIsStartState,
+    //setIsStartState,
    // setFirstMessage,
-    firstMessage,
-    isStartState,
-  //  clearMessages,
+   // firstMessage,
+   // isStartState,
+    clearMessages,
   } = useChatStore();
 
   const triggerFileInput = () => {
@@ -85,82 +88,70 @@ const ChatInterface: React.FC = () => {
 
   const handleSendMessage = useCallback(async () => {
     if (!input.trim()) return; // Prevent sending empty messages
-  
-    // Prepare file metadata
-    const fileMetadata: FileMetadata[] = pendingFiles.map((file) => ({
-      name: file.name,
-      type: file.type,
-    }));
-  
+
     // Create user message
-    const userMessage: MessageType = {
-      role: "user",
+    const userMessage: ConversationMessage = {
+      is_user: true,
       content: input,
-      files: fileMetadata,
-      images: pendingFiles
-        .filter((file) => file.type.startsWith("image/"))
-        .map((file) => URL.createObjectURL(file)),
     };
-  
-    if (!conversation && userToken?.key && firstMessage) {
-      await createConversation(input, userToken.key);
-    }
-    console.log("here nigga");
-    addMessageToConversation(conversation!.id, input, true, userToken!.key);
+
     addMessage(userMessage);
-  
     setIsTyping(true);
     setError(null);
   
-    // Initialize first message if this is the start of a conversation
-    if (isStartState) {
-      try {
-        await createConversation(input, userToken!.key); // Wait to ensure the conversation is created
-        setIsStartState(false); // Mark the start state as complete
-      } catch (error) {
-        console.error("Error creating conversation:", error);
-        setError("Failed to start a new conversation. Please try again.");
-        setIsTyping(false);
-        return;
-      }
-    }
   
     try {
+      // API call for message response
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: conversationMessages ? [...conversationMessages, userMessage] : [userMessage], // Default to an empty array if null
+          messages: conversationMessages 
+            ? [...conversationMessages, userMessage] 
+            : [userMessage],
           metadata: {
             fileCount: pendingFiles.length,
             inputLength: input.length,
           },
         }),
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-  
-      const data: APIResponse = await response.json();  
-     
+
+      const data: APIResponse = await response.json();
+      console.log(data);
       if (data.error) {
         throw new Error(data.error);
       }
-      addMessageToConversation(conversation!.id, data.message!.content, false, userToken!.key);
   
-    } catch (error) {
-      console.error("Chat error:", error);
+      const aiMessage: ConversationMessage = {
+        is_user: false,
+        content: data.message!.content,
+      };
+
+      // Local addition of AI response
+      addMessage(aiMessage);
   
-      setError(
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred. Please try again."
-      );
+      // If userToken exists, sync with backend
+      if (userToken?.key) {
+        // Create conversation if not exists
+        clearMessages()
+        if (!conversation) {
+          await createConversation(input, userToken.key);
+        }
+        
+        // Add messages to conversation
+        await addMessageToConversation(conversation!.id, input, true, userToken.key);
+        await addMessageToConversation(conversation!.id, data.message!.content, false, userToken.key);
+      }
+
     } finally {
       // Reset input and pending files, and stop typing indicator
+      
       setInput("");
       setPendingFiles([]);
       if (fileInputRef.current) {
@@ -177,10 +168,11 @@ const ChatInterface: React.FC = () => {
     addMessage,
     createConversation,
     userToken,
-    isStartState,
-    setIsStartState
+    clearMessages,
+   // isStartState,
+  //  setIsStartState,
+    //firstMessage
   ]);
-  
 
   const renderMessageContent = (msg: ConversationMessage) => {
     return (
@@ -231,6 +223,15 @@ const ChatInterface: React.FC = () => {
     );
   };
 
+  useEffect(() => {
+    if (messageContainerRef.current) {
+      messageContainerRef.current.scrollTo({
+        top: messageContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [conversationMessages]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -253,7 +254,9 @@ const ChatInterface: React.FC = () => {
           </motion.h1>
 
           {/* Chat Messages Container */}
-          <div className="flex-grow overflow-y-auto mb-6 space-y-4 p-4 bg-white rounded-lg">
+          <div 
+          ref={messageContainerRef}
+          className="flex-grow overflow-y-auto mb-6 space-y-4 p-4 bg-white rounded-lg scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {/* {isStartState ? ( */}
               {/* // Render only the Default AI Initial Message */}
               {/* <motion.div
@@ -315,6 +318,7 @@ const ChatInterface: React.FC = () => {
                 </motion.div>
 
                 {/* Existing Messages */}
+
                 {conversationMessages && conversationMessages.length > 0 ? (
                   <>
                 {conversationMessages!.map((msg, index) => (

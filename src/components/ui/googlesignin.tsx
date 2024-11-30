@@ -45,7 +45,7 @@ const GoogleSignIn: React.FC = () => {
   const handleCredentialResponse = (
     response: google.accounts.id.CredentialResponse
   ) => {
-    console.log("Encoded JWT ID token: ", response.credential);
+    // console.log("Encoded JWT ID token: ", response.credential);
     
     // Send the token to the backend
     fetch(`${apiEndpoint}/auth/google/login/`, {
@@ -57,7 +57,7 @@ const GoogleSignIn: React.FC = () => {
     })
       .then((res) => res.json())
       .then((data) => {
-        console.log("User authenticated:", data);
+        console.log("", data);
         //storing it in the Zustand store
         setUserToken({
           key: data.key,
@@ -82,7 +82,7 @@ const GoogleSignIn: React.FC = () => {
       })
         .then((res) => res.json())
         .then((data) => {
-          console.log("User Data acquired:", data);
+          // console.log("User Data acquired:", data);
           //storing it in the Zustand store
           setUserData({
             userId: data.sub, // Assuming `sub` is the unique user ID provided by Google
