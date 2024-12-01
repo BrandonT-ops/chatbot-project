@@ -4,7 +4,7 @@ import React, {
   useState,
   useRef,
   useCallback,
-  useEffect,
+ // useEffect,
   //  useEffect
 } from "react";
 import {
@@ -51,7 +51,7 @@ const ChatInterface: React.FC = () => {
     userToken,
     setIsStartState,
     setFirstMessage,
-    fetchConversations,
+   // fetchConversations,
      firstMessage,
      isStartState,
     // clearMessages,
