@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
 //use effect
 import {
   Disclosure,
@@ -21,7 +21,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { useChatStore } from "@/lib/store";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import GoogleSignIn from "./googlesignin";
 
 
@@ -34,6 +34,7 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
+
 const Header = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { setSearchResults,clearConversationMessages, userData, clearUserData, clearUserToken, clearMessages, clearSearch, setIsLoggedIn, isLoggedIn} = useChatStore();
@@ -41,9 +42,12 @@ const Header = () => {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [isTermsChecked, setIsTermsChecked] = useState(false);
+  const searchParams = useSearchParams();
   const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
   const { userToken } = useChatStore();
+
+  
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +83,7 @@ const Header = () => {
       }
 
       const data = await response.json();
-      console.log(data);
+      // console.log(data);
 
       // Check if the response is an array
       if (Array.isArray(data) && data.length > 0) {
@@ -106,6 +110,57 @@ const Header = () => {
       });
     }
   };
+
+  useEffect(() => {
+    const term = searchParams.get("term") || ""; // Get the `term` from URL
+    const trimmedTerm = term.trim();
+    
+    if (trimmedTerm) {
+      // Only update and search if the term has actually changed
+      if (trimmedTerm !== searchTerm) {
+        setSearchTerm(trimmedTerm); // Update the input field
+        
+        const performSearch = async () => {
+          try {
+          
+            
+            const response = await fetch(
+              `${apiEndpoint}/shop/search/?query=${encodeURIComponent(trimmedTerm)}`
+            );
+            
+            if (!response.ok) {
+              throw new Error(`Search request failed with status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (Array.isArray(data) && data.length > 0) {
+              setSearchResults({
+                query: trimmedTerm,
+                results: data,
+                isLoading: false,
+              });
+            } else {
+              setSearchResults({
+                query: trimmedTerm,
+                results: [],
+                isLoading: true,
+              });
+            }
+          } catch (error) {
+            console.error("Search error:", error);
+            setSearchResults({
+              query: trimmedTerm,
+              results: [],
+              isLoading: false,
+            });
+          }
+        };
+        
+        performSearch();
+      }
+    }
+  }, [searchParams, searchTerm, apiEndpoint]);
 
   const handleSignOut = () => {
     clearUserData();
