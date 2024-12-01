@@ -57,9 +57,9 @@ const SideBar = () => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth <= 768);
       // Auto-close on mobile
-      if (window.innerWidth <= 768) {
-        setIsOpen(false);
-      }
+      // if (window.innerWidth <= 768) {
+      //   setIsOpen(false);
+      // }
     };
 
     // Check on initial load

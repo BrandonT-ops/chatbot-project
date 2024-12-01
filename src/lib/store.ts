@@ -223,7 +223,7 @@ export const useChatStore = create<ChatStore>()(
           });
           const data: Conversation[] = await response.json();
           set({ conversations: data });
-          //console.log(data);
+          // console.log(data);
         } catch (error) {
           console.error("Error fetching conversations:", error);
         }

@@ -51,6 +51,7 @@ const ChatInterface: React.FC = () => {
     userToken,
     setIsStartState,
     setFirstMessage,
+    fetchConversations,
      firstMessage,
      isStartState,
     // clearMessages,
@@ -195,6 +196,7 @@ const ChatInterface: React.FC = () => {
     setIsStartState,
     setFirstMessage,
     //clearMessages,
+    
     firstMessage
   ]);
 
@@ -247,43 +249,44 @@ const ChatInterface: React.FC = () => {
     );
   };
 
-  useEffect(() => {
-    const conversationId = conversation?.id; // Replace with actual conversation ID
-    const userTokening = userToken?.key; // Replace with the logged-in user's token
+  // useEffect(() => {
+  //   const conversationId = conversation?.id; // Replace with actual conversation ID
+  //   const userTokening = userToken?.key; // Replace with the logged-in user's token
   
-    if (userTokening) {
-      syncMessagesToBackend(conversationId ?? "", userToken.key);
-    }
-  }, []);
+  //   if (userTokening) {
+  //     syncMessagesToBackend(conversationId ?? "", userToken.key);
+  //     fetchConversations(conversationId);
+  //   }
+  // }, []);
 
-  const syncMessagesToBackend = async (
-    conversationId: string ,
-    userToken: string
-  ) => {
-    const state = useChatStore.getState(); 
-    const messages = state.conversationMessages || []; // Get stored messages
+  // const syncMessagesToBackend = async (
+  //   conversationId: string ,
+  //   userToken: string
+  // ) => {
+  //   const state = useChatStore.getState(); 
+  //   const messages = state.conversationMessages || []; // Get stored messages
 
-    if (state.hasSyncedMessages) {
-      console.log("Messages already synced.");
-      return;
-    }
+  //   if (state.hasSyncedMessages) {
+  //     console.log("Messages already synced.");
+  //     return;
+  //   }
   
-    for (const message of messages) {
-      try {
-        // Send each message to the backend
-        await state.addMessageToConversation(
-          conversationId,
-          message.content,
-          message.is_user,
-          userToken
-        );
-        console.log("Message synced:", message);
-      } catch (error) {
-        console.error("Error syncing message:", message, error);
-      }
-    }
-    state.setHasSyncedMessages(true);
-  };
+  //   for (const message of messages) {
+  //     try {
+  //       // Send each message to the backend
+  //       await state.addMessageToConversation(
+  //         conversationId,
+  //         message.content,
+  //         message.is_user,
+  //         userToken
+  //       );
+  //       console.log("Message synced:", message);
+  //     } catch (error) {
+  //       console.error("Error syncing message:", message, error);
+  //     }
+  //   }
+  //   state.setHasSyncedMessages(true);
+  // };
   
 
   // useEffect(() => {
@@ -353,6 +356,7 @@ const ChatInterface: React.FC = () => {
             {/* ) : ( */}
             {/* // Render Default AI Message + Existing Messages */}
 
+            {/* State syncing is harash */}
             {/* Default AI Initial Message */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
