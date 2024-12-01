@@ -98,7 +98,7 @@ const SearchResults = () => {
                   </div>
                   <div className="flex-grow">
                     <Link
-                      href={product.url}
+                      href={`/product?url=${encodeURIComponent(product.url)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline text-lg font-medium"

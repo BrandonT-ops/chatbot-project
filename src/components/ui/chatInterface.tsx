@@ -598,7 +598,7 @@ const ChatInterface: React.FC = () => {
               {/* Send button */}
               <button
                 onClick={handleSendMessage}
-                className="bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition flex items-center"
+                className="bg-gray-600 text-white p-3 rounded-lg hover:bg-gray-700 transition flex items-center"
               >
                 <PaperAirplaneIcon className="h-5 w-5 mr-0 sm:mr-2" />
                 <span className="hidden sm:inline">Send</span>
@@ -607,7 +607,7 @@ const ChatInterface: React.FC = () => {
             {/* Copyright */}
             <div className="text-center text-gray-500 py-4 mt-4 text-xs">
               © {new Date().getFullYear()} Richenel&apos;s AI Agency. All rights
-              reserved.{" "}
+              reserved.{" "} By using this app you accept the&nbsp;
               <Link
                 href="/conditions"
                 className="text-gray-900 hover:underline"

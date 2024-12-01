@@ -150,7 +150,7 @@ const SideBar = () => {
           )}
           <button
             onClick={toggleSidebar}
-            className="ml-auto p-2 bg-gray-500 hover:bg-gray-600 rounded-full"
+            className="ml-auto p-2 bg-gray-600 hover:bg-gray-700 rounded-full"
           >
             {isOpen ? (
               <ChevronLeftIcon className="h-5 w-5" />
@@ -166,9 +166,9 @@ const SideBar = () => {
           className={`
             flex items-center 
             m-4 p-2 
-            bg-gray-500 text-white 
+            bg-gray-600 text-white 
             rounded-md 
-            hover:bg-gray-600 
+            hover:bg-gray-700 
             transition-all
             ${!isOpen && "justify-center"}
           `}

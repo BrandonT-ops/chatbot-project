@@ -116,51 +116,38 @@ const Header = () => {
     const trimmedTerm = term.trim();
     
     if (trimmedTerm) {
-      // Only update and search if the term has actually changed
-      if (trimmedTerm !== searchTerm) {
-        setSearchTerm(trimmedTerm); // Update the input field
-        
-        const performSearch = async () => {
-          try {
+      // Use a flag to track if initial search has been performed
+      setSearchTerm(trimmedTerm); // Update the input field
+  
+      const performSearch = async () => {
+        try {
+          const response = await fetch(
+            `${apiEndpoint}/shop/search/?query=${encodeURIComponent(trimmedTerm)}`
+          );
           
-            
-            const response = await fetch(
-              `${apiEndpoint}/shop/search/?query=${encodeURIComponent(trimmedTerm)}`
-            );
-            
-            if (!response.ok) {
-              throw new Error(`Search request failed with status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (Array.isArray(data) && data.length > 0) {
-              setSearchResults({
-                query: trimmedTerm,
-                results: data,
-                isLoading: false,
-              });
-            } else {
-              setSearchResults({
-                query: trimmedTerm,
-                results: [],
-                isLoading: true,
-              });
-            }
-          } catch (error) {
-            console.error("Search error:", error);
-            setSearchResults({
-              query: trimmedTerm,
-              results: [],
-              isLoading: false,
-            });
+          if (!response.ok) {
+            throw new Error(`Search request failed with status: ${response.status}`);
           }
-        };
-        
-        performSearch();
-      }
+          
+          const data = await response.json();
+          setSearchResults({
+            query: trimmedTerm,
+            results: Array.isArray(data) ? data : [],
+            isLoading: false, // Always set to false after search completes
+          });
+        } catch (error) {
+          console.error("Search error:", error);
+          setSearchResults({
+            query: trimmedTerm,
+            results: [],
+            isLoading: false, // Set to false even on error
+          });
+        }
+      };
+      
+      performSearch();
     }
-  }, [searchParams, searchTerm, apiEndpoint]);
+  }, [searchParams, apiEndpoint, setSearchResults]); // Reduced dependencies
 
   const handleSignOut = () => {
     clearUserData();

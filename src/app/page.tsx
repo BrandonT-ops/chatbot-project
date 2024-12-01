@@ -12,6 +12,7 @@ export default function Home() {
       <Header />
       <ChatInterface />
       {isLoggedIn && <SideBar />} 
+      {/* <SideBar /> */}
     </main>
   );
 }
