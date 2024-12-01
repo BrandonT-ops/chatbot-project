@@ -10,6 +10,9 @@ export type APIResponse = {
   message?: {
     content: string;
     images?: string[];
+    user_answer?: string;
+    query?: string;
+    send_request?: boolean;
     metadata?: Record<string, unknown>;
   };
   error?: string;
@@ -59,6 +62,18 @@ export interface ProductSearchResult {
   description: string;
 }
 
+export interface ChatProductSearchResult {
+  url: string;
+  name: string;
+  price: number;
+  disponibilite: string;
+  categorie: string;
+  image_url: string;
+  score: number;
+  description: string;
+}
+
+
 export interface SearchResultType {
   query: string;
   results: ProductSearchResult[];
@@ -94,6 +109,9 @@ interface ChatStore {
   setSearchLoading: (isLoading: boolean) => void;
   clearSearch: () => void;
 
+  // chatSearchResults: ChatProductSearchResult | null;
+  // setChatSearchResults: (results: ChatProductSearchResult | null ) => void;
+
   conversation: Conversation | null;
   setConversation: (conversationId: string) => Conversation | undefined;
 
@@ -122,8 +140,6 @@ interface ChatStore {
   // localAddMessage: (content: string, is_user: boolean) => void;
 
   clearConversationMessages: () => void;
-
-  
 
   // New authentication-related state and methods
   userData: UserData | null;
@@ -312,13 +328,7 @@ export const useChatStore = create<ChatStore>()(
       
           const data: ConversationMessage = await response.json();
           console.log(data);
-          // Update the state again with the actual response data
-          // set((state) => ({
-          //   conversationMessages: [
-          //     ...(state.conversationMessages || []),
-          //     data,
-          //   ],
-          // }));
+        
         } catch (error) {
           console.error("Error adding message to conversation:", error);
           // Optionally handle the error state (e.g., revert optimistically added message)

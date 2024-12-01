@@ -24,7 +24,9 @@ const SideBar = () => {
     clearSearch,
     clearUserData,
     setIsLoggedIn,
-    setConversation
+    setConversation,
+    setFirstMessage,
+    setHasSyncedMessages,
   } = useChatStore();
   const {
     // addMessageToConversation,
@@ -44,11 +46,8 @@ const SideBar = () => {
     clearSearch();
     clearUserData();
     setIsLoggedIn(false);
-
-    // Optional: Add any additional logout logic, like:
-    // - Redirecting to login page
-    // - Clearing other app state
-    // - Calling a backend logout endpoint
+    setFirstMessage("");
+    setHasSyncedMessages(false);
   };
 
   // Check screen size and set mobile view

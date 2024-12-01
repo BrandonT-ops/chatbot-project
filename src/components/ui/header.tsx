@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense} from "react";
+import React, { useState, useEffect, Suspense } from "react";
 //use effect
 import {
   Disclosure,
@@ -24,7 +24,6 @@ import { useChatStore } from "@/lib/store";
 import { useRouter, useSearchParams } from "next/navigation";
 import GoogleSignIn from "./googlesignin";
 
-
 const navigation = [
   { name: "Dashboard", href: "#", current: true },
   { name: "Products", href: "/search", current: false },
@@ -34,10 +33,21 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-
 const Header = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const { setSearchResults,clearConversationMessages, userData, clearUserData, clearUserToken, clearMessages, clearSearch, setIsLoggedIn, isLoggedIn} = useChatStore();
+  const {
+    setFirstMessage,
+    setHasSyncedMessages,
+    setSearchResults,
+    clearConversationMessages,
+    userData,
+    clearUserData,
+    clearUserToken,
+    clearMessages,
+    clearSearch,
+    setIsLoggedIn,
+    isLoggedIn,
+  } = useChatStore();
   //let isLoggedIn = !!userData; // Check if the user is logged in
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
@@ -46,8 +56,6 @@ const Header = () => {
   const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
   const { userToken } = useChatStore();
-
-  
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,9 +79,7 @@ const Header = () => {
 
     try {
       const response = await fetch(
-        `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
-          trimmedTerm
-        )}`
+        `${apiEndpoint}/shop/search/?query=${encodeURIComponent(trimmedTerm)}`
       );
 
       if (!response.ok) {
@@ -114,21 +120,25 @@ const Header = () => {
   useEffect(() => {
     const term = searchParams.get("term") || ""; // Get the `term` from URL
     const trimmedTerm = term.trim();
-    
+
     if (trimmedTerm) {
       // Use a flag to track if initial search has been performed
       setSearchTerm(trimmedTerm); // Update the input field
-  
+
       const performSearch = async () => {
         try {
           const response = await fetch(
-            `${apiEndpoint}/shop/search/?query=${encodeURIComponent(trimmedTerm)}`
+            `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
+              trimmedTerm
+            )}`
           );
-          
+
           if (!response.ok) {
-            throw new Error(`Search request failed with status: ${response.status}`);
+            throw new Error(
+              `Search request failed with status: ${response.status}`
+            );
           }
-          
+
           const data = await response.json();
           setSearchResults({
             query: trimmedTerm,
@@ -144,7 +154,7 @@ const Header = () => {
           });
         }
       };
-      
+
       performSearch();
     }
   }, [searchParams, apiEndpoint, setSearchResults]); // Reduced dependencies
@@ -156,7 +166,8 @@ const Header = () => {
     clearSearch();
     setIsLoggedIn(false);
     clearConversationMessages();
-    
+    setFirstMessage("");
+    setHasSyncedMessages(false);
   };
 
   return (
@@ -257,7 +268,11 @@ const Header = () => {
                             width={36}
                             height={36}
                             alt="Profile Picture"
-                            src={userData?.profilePicture || userData?.firstname?.charAt(0).toUpperCase() || "?"}
+                            src={
+                              userData?.profilePicture ||
+                              userData?.firstname?.charAt(0).toUpperCase() ||
+                              "?"
+                            }
                             className="h-9 w-9 rounded-full"
                           />
                         ) : (
