@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect, Suspense} from "react";
 //use effect
 import {
   Disclosure,
@@ -407,5 +407,9 @@ const Header = () => {
     </>
   );
 };
-
-export default Header;
+const HeaderWithSuspense = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <Header />
+  </Suspense>
+);
+export default HeaderWithSuspense;

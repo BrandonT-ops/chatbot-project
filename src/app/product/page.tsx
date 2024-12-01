@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ArrowPathIcon, LinkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
 import { useChatStore } from '@/lib/store';
 
-const ProductRedirect: React.FC = () => {
+const ProductRedirectContent: React.FC = () => {
   const searchParams = useSearchParams();
   const url = searchParams.get('url');
   
@@ -151,6 +151,14 @@ const ProductRedirect: React.FC = () => {
   };
 
   return renderContent();
+};
+
+const ProductRedirect = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProductRedirectContent />
+    </Suspense>
+  );
 };
 
 export default ProductRedirect;
