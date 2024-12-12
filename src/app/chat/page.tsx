@@ -26,7 +26,7 @@ const ChatPage = () => {
     <div className="relative -mt-12">
       <Header />
       {/* Navigation Buttons */}
-      <div className="fixed top-20 left-0 right-0 z-50 flex justify-end px-4">
+      <div className="fixed top-20 right-0 z-30 w-fit flex justify-end px-4">
         {/* <button
           onClick={() => handleNavigation('chat')}
           className={`px-4 py-2 backdrop-blur-lg rounded-full shadow-xl hover:bg-blue-100 transition-all group ${
@@ -39,7 +39,7 @@ const ChatPage = () => {
         </button> */}
         <button
           onClick={() => handleNavigation('search')}
-          className={`px-4 py-4 backdrop-blur-lg rounded-full shadow-xl hover:bg-blue-100 transition-all group ${
+          className={`px-4 py-4 backdrop-blur-lg rounded-full w-fit shadow-xl hover:bg-blue-100 transition-all group ${
             activeView === 'search'
               ? 'bg-blue-500 text-white'
               : 'bg-gray-200 text-gray-800 hover:bg-gray-300'

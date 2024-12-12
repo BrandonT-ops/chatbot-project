@@ -518,6 +518,9 @@ const ChatInterface: React.FC = () => {
             )}
 
             {/* Render search results if available */}
+            {searchResults &&
+              searchResults.results &&
+              searchResults.results.length > 0 ? (
             <div className="bg-white px-4 py-6 rounded-lg shadow-md flex-grow mt-4">
               {searchResults &&
               searchResults.results &&
@@ -589,6 +592,7 @@ const ChatInterface: React.FC = () => {
                   <span className="text-gray-500 text-sm">Loading...</span>
                 </div>
               ) : (
+              
                 <div className="flex items-center justify-center py-4">
                   <ExclamationCircleIcon className="h-6 w-6 text-gray-400 mr-2" />
                   <span className="text-gray-500 text-sm">
@@ -597,6 +601,10 @@ const ChatInterface: React.FC = () => {
                 </div>
               )}
             </div>
+              ):(
+                <div>
+                </div>
+              )}
 
             {/* Typing Indicator */}
             {isTyping && (
@@ -717,7 +725,7 @@ const ChatInterface: React.FC = () => {
               {/* {/* Clear Chat button */}
               <button
                 onClick={handleClearChat}
-                className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition flex items-center"
+                className="bg-white text-red-500 p-3 rounded-lg border hover:bg-red-50 transition flex items-center"
               >
                 <TrashIcon className="h-5 w-5" />
               </button>

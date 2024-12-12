@@ -65,9 +65,6 @@ const GoogleSignIn: React.FC = () => {
         });
        
         setIsLoggedIn(true);
-
-        
-       
         
         
         // page refresh

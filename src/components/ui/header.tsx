@@ -18,15 +18,18 @@ import {
   ShoppingBagIcon,
   MagnifyingGlassIcon,
   UserCircleIcon,
+  ChatBubbleOvalLeftEllipsisIcon,
+  ArrowLeftOnRectangleIcon,
+  PlusIcon,
+  UserPlusIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { useChatStore } from "@/lib/store";
 import { useRouter, useSearchParams } from "next/navigation";
-import GoogleSignIn from "./googlesignin";
 
 const navigation = [
   { name: "Dashboard", href: "#", current: true },
-  { name: "Products", href: "/search", current: false },
+  { name: "Search Results", href: "/search", current: false },
 ];
 
 function classNames(...classes: string[]) {
@@ -35,6 +38,7 @@ function classNames(...classes: string[]) {
 
 const Header = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [visibleConversations, setVisibleConversations] = useState(5);
   const {
     setFirstMessage,
     setHasSyncedMessages,
@@ -47,6 +51,12 @@ const Header = () => {
     clearSearch,
     setIsLoggedIn,
     isLoggedIn,
+    userToken,
+    fetchConversations,
+    conversations,
+    fetchConversationMessages,
+    setConversation,
+    setIsStartState,
   } = useChatStore();
   //let isLoggedIn = !!userData; // Check if the user is logged in
   const router = useRouter();
@@ -54,8 +64,6 @@ const Header = () => {
   const [isTermsChecked, setIsTermsChecked] = useState(false);
   const searchParams = useSearchParams();
   const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
-
-  const { userToken } = useChatStore();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,6 +178,48 @@ const Header = () => {
     setHasSyncedMessages(false);
   };
 
+  // Conversation selection handler
+  const handleSelectConversation = async (conversationId: string) => {
+    clearMessages();
+    clearConversationMessages();
+
+    setConversation(conversationId);
+
+    if (userToken) {
+      try {
+        fetchConversationMessages(conversationId, userToken.key);
+      } catch (error) {
+        console.error("Error fetching conversation messages:", error);
+      }
+    }
+  };
+
+  // Add new conversation handler
+  const addNewConversation = async () => {
+    try {
+      setIsStartState(true);
+      clearMessages();
+      clearConversationMessages();
+    } catch (error) {
+      console.error("Error creating new conversation:", error);
+    }
+  };
+
+  // See more conversations handler
+  const handleSeeMore = () => {
+    setVisibleConversations((prev) => prev + 5);
+  };
+
+  // Fetch conversations when component mounts
+  useEffect(() => {
+    if (userToken) {
+      fetchConversations(userToken.key);
+    }
+  }, [userToken, fetchConversations]);
+
+  const handleRedirect = () => {
+    router.push("/login"); // Navigate to the login page
+  };
   return (
     <>
       <Disclosure
@@ -300,32 +350,209 @@ const Header = () => {
                   </Menu>
                 </>
               ) : (
-                <div>
-                  <GoogleSignIn />
-                </div>
+                <div className="flex justify-center items-center w-full px-1 sm:px-3 md:px-3">
+                <button
+                  onClick={handleRedirect}
+                  className="
+                    flex 
+                    items-center 
+                    justify-center 
+                    w-full 
+                    max-w-xs 
+                    px-3
+                    py-2 
+                    bg-gray-600 
+                    text-white 
+                    text-xs 
+                    sm:text-sm 
+                    font-medium 
+                    rounded-lg 
+                    shadow-md 
+                    hover:bg-gray-700 
+                    transition 
+                    duration-300 
+                    focus:outline-none 
+                    focus:ring-2 
+                    focus:ring-offset-2 
+                    focus:ring-gray-500
+                    group
+                  "
+                >
+                  <UserPlusIcon 
+                    className="
+                      h-5
+                      w-5 
+                      sm:h-6
+                      sm:w-6 
+                      sm:mr-2 
+                      mr-0
+                      group-hover:scale-100
+                      transition
+                      duration-200
+                    " 
+                  />
+                  {/* <span className="sm:hidden block ml-2">Sign in</span> */}
+                  <span className="sm:block hidden">Sign in with Google</span>
+                </button>
+              </div>
               )}
             </div>
           </div>
         </div>
 
+        {/* Mobile Menu Panel */}
         <DisclosurePanel className="sm:hidden">
           <div className="space-y-1 px-2 pb-3 pt-2">
-            {navigation.map((item) => (
-              <DisclosureButton
-                key={item.name}
-                as="a"
-                href={item.href}
-                aria-current={item.current ? "page" : undefined}
-                className={classNames(
-                  item.current
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                  "block rounded-md px-3 py-2 text-base font-medium"
+            {/* Search Bar for Mobile */}
+            <div className="px-2 pb-3">
+              <form onSubmit={handleSearch} className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="size-5 text-gray-900" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search for products..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    if (!e.target.value.trim()) {
+                      setSearchResults(null);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSearch(e);
+                    }
+                  }}
+                  className="w-full placeholder:text-sm bg-[#F0F2F5] text-gray-900 pl-10 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                />
+              </form>
+            </div>
+
+            {/* Navigation for non-logged in users */}
+            {!isLoggedIn && (
+              <>
+                {navigation.map((item) => (
+                  <DisclosureButton
+                    key={item.name}
+                    as="a"
+                    href={item.href}
+                    aria-current={item.current ? "page" : undefined}
+                    className={classNames(
+                      item.current
+                        ? "bg-gray-700 text-white"
+                        : "text-gray-300 hover:bg-gray-700 hover:text-white",
+                      "block rounded-md px-3 py-2 text-base font-medium"
+                    )}
+                  >
+                    {item.name}
+                  </DisclosureButton>
+                ))}
+                <div className="px-2">
+                  {/* <div className="flex justify-center items-center">
+                    <button
+                      onClick={handleRedirect}
+                      className="flex items-center px-6 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 21v-2a4 4 0 00-3-3.87M12 3v4m-4-4v4m12 7l-4 4m0 0l-4-4m4 4V3"
+                        />
+                      </svg>
+                      Sign in with Google
+                    </button>
+                  </div> */}
+                </div>
+              </>
+            )}
+
+            {/* Sidebar-like content for logged-in users */}
+            {isLoggedIn && (
+              <div>
+                {/* Add Conversation Button */}
+                <button
+                  onClick={addNewConversation}
+                  className="flex items-center w-full p-3 bg-gray-100 hover:bg-gray-200 text-gray-900"
+                >
+                  <PlusIcon className="h-5 w-5 mr-2" />
+                  New Conversation
+                </button>
+
+                {/* Conversation List */}
+                <div className="mt-2 px-2 text-xs font-bold text-gray-500 uppercase">
+                  Recent Conversations
+                </div>
+                {conversations && conversations.length > 0 ? (
+                  conversations
+                    .slice(0, visibleConversations)
+                    .map((conversation) => (
+                      <button
+                        key={conversation.id}
+                        onClick={() =>
+                          handleSelectConversation(conversation.id)
+                        }
+                        className="w-full text-left p-3 hover:bg-gray-100 border-b text-gray-900 text-sm"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5 text-gray-600 flex-shrink-0" />
+                          <span className="truncate">{conversation.title}</span>
+                        </div>
+                      </button>
+                    ))
+                ) : (
+                  <div className="p-3 text-gray-500 text-xs text-center">
+                    None yet, Start a new conversation!
+                  </div>
                 )}
-              >
-                {item.name}
-              </DisclosureButton>
-            ))}
+
+                {/* See More */}
+                {conversations!.length > visibleConversations && (
+                  <button
+                    onClick={handleSeeMore}
+                    className="w-full p-3 text-center text-gray-900 hover:bg-gray-100 flex items-center justify-center"
+                  >
+                    See more
+                  </button>
+                )}
+
+                {/* Logout Button */}
+                <button
+                  onClick={handleSignOut}
+                  className="w-full text-left p-3 hover:bg-gray-100 text-gray-900 flex items-center"
+                >
+                  <ArrowLeftOnRectangleIcon className="h-5 w-5 mr-2" />
+                  Logout
+                </button>
+
+                {/* Additional logged-in user actions */}
+                <div className="flex space-x-2 p-3">
+                  <button
+                    type="button"
+                    className="flex-1 rounded-md bg-[#F0F2F5] p-2 text-gray-900 hover:bg-gray-200 transition-colors"
+                  >
+                    <HeartIcon aria-hidden="true" className="size-5 mx-auto" />
+                  </button>
+                  <button
+                    type="button"
+                    className="flex-1 rounded-md bg-[#F0F2F5] p-2 text-gray-900 hover:bg-gray-200 transition-colors"
+                  >
+                    <ShoppingBagIcon
+                      aria-hidden="true"
+                      className="size-5 mx-auto"
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </DisclosurePanel>
       </Disclosure>
@@ -422,6 +649,7 @@ const Header = () => {
     </>
   );
 };
+
 const HeaderWithSuspense = () => (
   <Suspense fallback={<div>Loading...</div>}>
     <Header />
