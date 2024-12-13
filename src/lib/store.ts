@@ -43,8 +43,9 @@ export interface Conversation {
 export interface ConversationMessage {
   content: string;
   is_user: boolean;
+  images?: string[]; // Array to store image URLs
+  files?: { name: string; url: string }[]; // Array to store file metadata
 }
-
 export type FileMetadata = {
   name: string;
   type: string;

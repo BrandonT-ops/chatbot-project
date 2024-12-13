@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useChatStore } from "@/lib/store";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+// import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 import Header from "@/components/ui/header";
 
@@ -14,10 +14,8 @@ const SearchResults = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const toggleExpand = () => setIsExpanded((prev) => !prev);
 
-  const handleNavigation = (view: "chat") => {
-    if (view === "chat") {
-      router.push("/chat");
-    }
+  const handleNavigation = () => {
+    router.push('/')
   };
 
   if (!searchResults) return null;
@@ -54,20 +52,19 @@ const SearchResults = () => {
           <div className="flex items-center justify-between mb-6">
             {/* Back to Chat Button */}
             <button
-              onClick={() => handleNavigation("chat")}
+              onClick={handleNavigation}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Back to Chat
             </button>
 
             {/* Search Results Label */}
-           
           </div>
         </div>
 
         <div className="text-4xl font-semibold text-gray-700 py-2">
-              Search Results for &quot;{searchResults.query}&quot;
-          </div>
+          Search Results for &quot;{searchResults.query}&quot;
+        </div>
         {/* Search Info */}
         <div className="text-sm text-gray-600 mb-6">
           About {searchResults.results.length} results
@@ -88,7 +85,9 @@ const SearchResults = () => {
                 <div className="flex space-x-4">
                   <div className="flex-shrink-0 w-36 h-36">
                     <Image
-                      src={product.image_url}
+                      src={`/api/proxy/image-proxy?url=${encodeURIComponent(
+                        product.image_url
+                      )}`}
                       alt={product.name}
                       width={144}
                       height={144}
@@ -142,7 +141,7 @@ const SearchResults = () => {
           )}
         </div>
 
-        {/* Pagination */}
+        {/* Pagination
         <div className="flex justify-center items-center mt-8 space-x-4 text-blue-600">
           <button
             className="flex items-center hover:underline disabled:opacity-50"
@@ -167,7 +166,7 @@ const SearchResults = () => {
             Next
             <ChevronRightIcon className="h-5 w-5 ml-1" />
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

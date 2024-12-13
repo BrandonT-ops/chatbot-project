@@ -11,6 +11,8 @@ export async function POST(request: NextRequest) {
     const formattedMessages = messages.map((msg: ConversationMessage) => ({
       role: msg.is_user ? "user" : "assistant",
       content: msg.content,
+      ...(msg.images ? { images: msg.images } : {}),
+      ...(msg.files ? { files: msg.files } : {}),
     }));
 
     // Add a system message to define the assistant's role and behavior

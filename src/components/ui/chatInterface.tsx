@@ -71,12 +71,8 @@ const ChatInterface: React.FC = () => {
     fileInputRef.current?.click();
   };
 
-  const removeFile = (index: number) => {
-    setPendingFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files ? Array.from(e.target.files) : [];
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files ? Array.from(event.target.files) : [];
 
     // Validate file types and sizes
     const validFiles = files.filter((file) => {
@@ -104,15 +100,81 @@ const ChatInterface: React.FC = () => {
       return true;
     });
 
-    setPendingFiles((prev) => [...prev, ...validFiles]);
+    // Add valid files to state, avoiding duplicates
+    setPendingFiles((prev) => {
+      const uniqueFiles = validFiles.filter(
+        (file) =>
+          !prev.some(
+            (prevFile) =>
+              prevFile.name === file.name && prevFile.size === file.size
+          )
+      );
+      return [...prev, ...uniqueFiles];
+    });
+
+    event.target.value = ""; // Reset the input to allow re-adding the same file
   };
 
+  const removeFile = (index: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = e.target.files ? Array.from(e.target.files) : [];
+
+  //   // Validate file types and sizes
+  //   const validFiles = files.filter((file) => {
+  //     const allowedTypes = [
+  //       "image/jpeg",
+  //       "image/png",
+  //       "image/svg+xml",
+  //       "application/pdf",
+  //       "text/plain",
+  //       "application/msword",
+  //       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  //     ];
+  //     const maxSize = 5 * 1024 * 1024; // 5MB
+
+  //     if (!allowedTypes.includes(file.type)) {
+  //       setError(`Unsupported file type: ${file.name}`);
+  //       return false;
+  //     }
+
+  //     if (file.size > maxSize) {
+  //       setError(`File too large: ${file.name} (max 5MB)`);
+  //       return false;
+  //     }
+
+  //     return true;
+  //   });
+
+  //   setPendingFiles((prev) => {
+  //     const newFiles = validFiles.filter(
+  //       (file) => !prev.some((prevFile) => prevFile.name === file.name && prevFile.size === file.size)
+  //     );
+  //     return [...prev, ...newFiles];
+  //   });
+  // };
+
   const handleSendMessage = useCallback(async () => {
-    if (!input.trim()) return; // Prevent sending empty messages
+    if (!input.trim() && pendingFiles.length === 0) return; // Prevent sending empty messages and no files
+
+    const images = pendingFiles
+      .filter((file) => file.type.startsWith("image/"))
+      .map((imageFile) => URL.createObjectURL(imageFile)); // Convert image File to a local URL
+
+    const files = pendingFiles
+      .filter((file) => !file.type.startsWith("image/"))
+      .map((file) => ({
+        name: file.name,
+        url: URL.createObjectURL(file), // Generate a local URL for the file
+      }));
 
     const userMessage: ConversationMessage = {
       is_user: true,
       content: input,
+      images, // Assign image URLs
+      files, // Assign file metadata
     };
 
     setError(null);
@@ -131,7 +193,7 @@ const ChatInterface: React.FC = () => {
       }
       await addMessageToConversation(
         conversation!.id,
-        input,
+        userMessage.content,
         true,
         userToken.key
       );
@@ -256,7 +318,7 @@ const ChatInterface: React.FC = () => {
         {/* Text content */}
         {msg.content && <p className="text-gray-800 text-sm">{msg.content}</p>}
 
-        {/* Image preview
+        {/* Image preview */}
         {msg.images && msg.images.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {msg.images.map((img, index) => (
@@ -272,13 +334,14 @@ const ChatInterface: React.FC = () => {
                   width={100}
                   height={100}
                   className="object-cover rounded-lg"
+                  unoptimized
                 />
               </motion.div>
             ))}
           </div>
-        )} */}
+        )}
 
-        {/* File attachments
+        {/*  File attachments */}
         {msg.files && msg.files.length > 0 && (
           <div className="space-y-1">
             {msg.files.map((file, index) => (
@@ -294,10 +357,11 @@ const ChatInterface: React.FC = () => {
               </motion.div>
             ))}
           </div>
-        )} */}
+        )}
       </div>
     );
   };
+
   const handleClearChat = () => {
     clearMessages();
     clearConversationMessages();
@@ -434,7 +498,6 @@ const ChatInterface: React.FC = () => {
             </motion.div>
 
             {/* Existing Messages */}
-
             {conversationMessages && conversationMessages.length > 0 ? (
               <>
                 {conversationMessages!.map((msg, index) => (
@@ -519,92 +582,94 @@ const ChatInterface: React.FC = () => {
 
             {/* Render search results if available */}
             {searchResults &&
-              searchResults.results &&
-              searchResults.results.length > 0 ? (
-            <div className="bg-white px-4 py-6 rounded-lg shadow-md flex-grow mt-4">
-              {searchResults &&
-              searchResults.results &&
-              searchResults.results.length > 0 ? (
-                <>
-                  <div className="flex items-center mb-4">
-                    <span className="font-semibold text-gray-800 text-lg">
-                      Search Results
+            searchResults.results &&
+            searchResults.results.length > 0 ? (
+              <div className="bg-white px-4 py-6 rounded-lg shadow-md flex-grow mt-4">
+                {searchResults &&
+                searchResults.results &&
+                searchResults.results.length > 0 ? (
+                  <>
+                    <div className="flex items-center mb-4">
+                      <span className="font-semibold text-gray-800 text-lg">
+                        Search Results
+                      </span>
+                    </div>
+                    <motion.div
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
+                    >
+                      {searchResults.results
+                        .slice(0, 3)
+                        .map((result, index) => (
+                          <Link
+                            key={index}
+                            href={`/product?url=${encodeURIComponent(
+                              result.url
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <motion.div
+                              variants={itemVariants}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:shadow-lg transition-transform cursor-pointer"
+                            >
+                              <div className="h-48 w-full flex items-center justify-center bg-gray-50 p-4">
+                                <Image
+                                  src={result.image_url}
+                                  alt={result.name}
+                                  width={250}
+                                  height={250}
+                                  className="object-contain max-h-full max-w-full"
+                                  unoptimized
+                                />
+                              </div>
+                              <div className="p-4 space-y-2">
+                                <h3 className="font-semibold text-gray-800 text-sm truncate">
+                                  {result.name}
+                                </h3>
+                                <p className="text-gray-600 text-xs line-clamp-2">
+                                  {result.description}
+                                </p>
+                                <div className="flex justify-between items-center pt-2">
+                                  <span className="text-green-600 font-bold text-sm">
+                                    ${result.price}
+                                  </span>
+                                  <ArrowRightIcon className="h-5 w-5 text-gray-400" />
+                                </div>
+                              </div>
+                            </motion.div>
+                          </Link>
+                        ))}
+                    </motion.div>
+                    <a
+                      href={`/search?term=${encodeURIComponent(
+                        searchResults.query
+                      )}`}
+                      className="text-blue-500 text-sm mt-4 block text-center"
+                    >
+                      See More
+                    </a>
+                  </>
+                ) : searchResults?.isLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <span className="text-gray-500 text-sm">Loading...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center py-4">
+                    <ExclamationCircleIcon className="h-6 w-6 text-gray-400 mr-2" />
+                    <span className="text-gray-500 text-sm">
+                      No results found
                     </span>
                   </div>
-                  <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
-                  >
-                    {searchResults.results.slice(0, 3).map((result, index) => (
-                      <Link
-                        key={index}
-                        href={`/product?url=${encodeURIComponent(result.url)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <motion.div
-                          variants={itemVariants}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:shadow-lg transition-transform cursor-pointer"
-                        >
-                          <div className="h-48 w-full flex items-center justify-center bg-gray-50 p-4">
-                            <Image
-                              src={result.image_url}
-                              alt={result.name}
-                              width={250}
-                              height={250}
-                              className="object-contain max-h-full max-w-full"
-                              unoptimized
-                            />
-                          </div>
-                          <div className="p-4 space-y-2">
-                            <h3 className="font-semibold text-gray-800 text-sm truncate">
-                              {result.name}
-                            </h3>
-                            <p className="text-gray-600 text-xs line-clamp-2">
-                              {result.description}
-                            </p>
-                            <div className="flex justify-between items-center pt-2">
-                              <span className="text-green-600 font-bold text-sm">
-                                ${result.price}
-                              </span>
-                              <ArrowRightIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                          </div>
-                        </motion.div>
-                      </Link>
-                    ))}
-                  </motion.div>
-                  <a
-                    href={`/search?term=${encodeURIComponent(
-                      searchResults.query
-                    )}`}
-                    className="text-blue-500 text-sm mt-4 block text-center"
-                  >
-                    See More
-                  </a>
-                </>
-              ) : searchResults?.isLoading ? (
-                <div className="flex items-center justify-center py-4">
-                  <span className="text-gray-500 text-sm">Loading...</span>
-                </div>
-              ) : (
-              
-                <div className="flex items-center justify-center py-4">
-                  <ExclamationCircleIcon className="h-6 w-6 text-gray-400 mr-2" />
-                  <span className="text-gray-500 text-sm">
-                    No results found
-                  </span>
-                </div>
-              )}
-            </div>
-              ):(
-                <div>
-                </div>
-              )}
+                )}
+              </div>
+            ) : (
+              <div></div>
+            )}
 
             {/* Typing Indicator */}
             {isTyping && (
@@ -652,53 +717,87 @@ const ChatInterface: React.FC = () => {
 
           {/* File Preview */}
           {pendingFiles.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-2">
+            <div className="mb-4 flex flex-row gap-2 overflow-x-auto py-2 px-1 pb-48 md:pb-32">
               {pendingFiles.map((file, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5 }}
-                  className="relative"
+                  className="relative shrink-0"
                 >
                   {file.type.startsWith("image/") ? (
-                    <Image
-                      src={URL.createObjectURL(file)}
-                      alt={`Preview ${file.name}`}
-                      width={100}
-                      height={100}
-                      className="rounded-lg object-cover"
-                    />
+                    <div className="relative group">
+                      <Image
+                        src={URL.createObjectURL(file)}
+                        alt={`Preview ${file.name}`}
+                        width={100}
+                        height={100}
+                        className="
+                rounded-lg 
+                object-cover 
+                sm:w-36
+                sm:h-36
+                w-28
+                h-28 
+                transition-all 
+                duration-300 
+                group-hover:brightness-75
+                group-hover:scale-105
+                shadow-md
+              "
+                      />
+                      <div
+                        className="
+              absolute 
+              top-0 
+              right-0 
+              m-1 
+              opacity-0 
+              group-hover:opacity-100 
+              transition-opacity 
+              duration-300
+            "
+                      >
+                        <button
+                          onClick={() => removeFile(index)}
+                          className="
+                  bg-red-500 
+                  text-white 
+                  rounded-full 
+                  p-1 
+                  hover:bg-red-600 
+                  transition
+                "
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
                   ) : (
                     <div className="flex items-center bg-gray-100 p-2 rounded-lg">
                       <DocumentIcon className="h-5 w-5 mr-2" />
                       <span className="text-sm">{file.name}</span>
                     </div>
                   )}
-                  <button
-                    onClick={() => removeFile(index)}
-                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                  >
-                    <XMarkIcon className="h-4 w-4" />
-                  </button>
                 </motion.div>
               ))}
             </div>
           )}
 
-          <div className="fixed bottom-0 left-0 w-full bg-white shadow-lg p-4 border-t h-16">
+          <div className="fixed bottom-0 left-0 w-full bg-white shadow-lg p-4 border-t h-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="flex items-center space-x-2 max-w-3xl mx-auto"
+              className="flex flex-col md:flex-row md:items-center gap-4 max-w-3xl mx-auto"
             >
               {/* Hidden file input */}
               <input
                 type="file"
                 ref={fileInputRef}
                 multiple
-                onChange={handleFileUpload}
+                onChange={handleFileChange}
                 className="hidden"
                 accept="image/*,application/pdf,.doc,.docx,.txt,.png,.svg,.jpg,.jpeg"
               />
@@ -709,35 +808,37 @@ const ChatInterface: React.FC = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                className="text-gray-900 text-sm flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="text-gray-900 text-sm flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 w-full"
                 placeholder="Chat with me..."
               />
 
-              {/* File upload button */}
-              <button
-                onClick={triggerFileInput}
-                disabled
-                className="bg-gray-200 p-3 rounded-lg hover:bg-gray-300 transition"
-              >
-                <PaperClipIcon className="h-5 w-5 text-gray-700" />
-              </button>
+              {/* Button container */}
+              <div className="flex flex-row justify-center md:flex-row gap-2 items-center w-full md:w-auto">
+                {/* File upload button */}
+                <button
+                  onClick={triggerFileInput}
+                  className="bg-gray-200 p-3 rounded-lg hover:bg-gray-300 transition flex-shrink-0"
+                >
+                  <PaperClipIcon className="h-5 w-5 text-gray-700" />
+                </button>
 
-              {/* {/* Clear Chat button */}
-              <button
-                onClick={handleClearChat}
-                className="bg-white text-red-500 p-3 rounded-lg border hover:bg-red-50 transition flex items-center"
-              >
-                <TrashIcon className="h-5 w-5" />
-              </button>
+                {/* Clear Chat button */}
+                <button
+                  onClick={handleClearChat}
+                  className="bg-white text-red-500 p-3 rounded-lg border hover:bg-red-50 transition flex-shrink-0 flex items-center"
+                >
+                  <TrashIcon className="h-5 w-5" />
+                </button>
 
-              {/* Send button */}
-              <button
-                onClick={handleSendMessage}
-                className="bg-gray-600 text-white p-3 rounded-lg hover:bg-gray-700 transition flex items-center"
-              >
-                <PaperAirplaneIcon className="h-5 w-5 mr-0 sm:mr-2" />
-                <span className="hidden sm:inline">Send</span>
-              </button>
+                {/* Send button */}
+                <button
+                  onClick={handleSendMessage}
+                  className="bg-gray-600 text-white p-3 rounded-lg hover:bg-gray-700 transition flex-shrink-0 flex items-center"
+                >
+                  <PaperAirplaneIcon className="h-5 w-5 mr-0 sm:mr-2" />
+                  <span className="hidden md:inline">Send</span>
+                </button>
+              </div>
             </motion.div>
             {/* Copyright */}
             <div className="text-center text-gray-500 py-4 mt-4 text-xs">
