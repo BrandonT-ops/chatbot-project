@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-//use effect
 import {
   Disclosure,
   DisclosureButton,
@@ -265,16 +264,19 @@ const Header = () => {
             {/* Search Bar */}
             <div className="items-center mr-4 md:block hidden max-w-3xl">
               <form onSubmit={handleSearch} className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                {/* <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <MagnifyingGlassIcon className="size-5 text-gray-900" />
-                </div>
-                <input
+                </div> */}
+                {/* <input
                   type="text"
                   placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
-
+                    if (!e.target.value.trim()) {
+                      // Clear search results when input is empty
+                      setSearchResults(null);
+                    }
                     // If input is emptied, reset search results
                     if (!e.target.value.trim()) {
                       setSearchResults(null);
@@ -286,7 +288,7 @@ const Header = () => {
                     }
                   }}
                   className="placeholder:text-sm bg-[#F0F2F5] text-gray-900 pl-10 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 w-64 lg:w-96"
-                />
+                /> */}
               </form>
             </div>
 
@@ -294,19 +296,19 @@ const Header = () => {
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
               {isLoggedIn ? (
                 <>
-                  <button
+                  {/* <button
                     type="button"
                     className="lg:block hidden relative rounded-md bg-[#F0F2F5] mr-3 p-2 text-gray-900 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors duration-150"
                   >
                     <HeartIcon aria-hidden="true" className="size-5" />
-                  </button>
+                  </button> */}
 
-                  <button
+                  {/* <button
                     type="button"
                     className="lg:block hidden relative rounded-md bg-[#F0F2F5] p-2 text-gray-900 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors duration-150"
                   >
                     <ShoppingBagIcon aria-hidden="true" className="size-5" />
-                  </button>
+                  </button> */}
 
                   {/* Profile dropdown */}
                   <Menu as="div" className="relative ml-3">

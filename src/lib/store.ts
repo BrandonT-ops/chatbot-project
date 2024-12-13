@@ -60,6 +60,8 @@ export interface ProductSearchResult {
   categorie: string;
   image_url: string;
   score: number;
+  boutique_name: string;
+  boutique_image: string;
   description: string;
 }
 

@@ -14,8 +14,8 @@ import {
   XMarkIcon,
   UserIcon,
   TrashIcon,
-  ExclamationCircleIcon,
-  ArrowRightIcon,
+  // ExclamationCircleIcon,
+  // ArrowRightIcon,
   //InformationCircleIcon,
   // ShoppingCartIcon,
   //  MagnifyingGlassIcon,
@@ -24,6 +24,8 @@ import {
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { Modal } from "./modal";
+import { useRouter } from "next/navigation";
 
 // Define API response type
 interface APIResponse {
@@ -39,6 +41,7 @@ interface APIResponse {
 }
 
 const ChatInterface: React.FC = () => {
+  const router = useRouter();
   const [input, setInput] = useState("");
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -63,9 +66,25 @@ const ChatInterface: React.FC = () => {
     setSearchResults,
     firstMessage,
     isStartState,
-    searchResults,
+    // searchResults,
     clearMessages,
   } = useChatStore();
+
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    actionText: string;
+    onAction?: () => void; // Changed from null to optional
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    actionText: "",
+    onAction: undefined, // Use undefined instead of null
+  });
+
+  const closeModal = () => setModalState({ ...modalState, isOpen: false });
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
@@ -117,6 +136,9 @@ const ChatInterface: React.FC = () => {
 
   const removeFile = (index: number) => {
     setPendingFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+  const redirectToLogin = () => {
+    router.push("login");
   };
 
   // const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -202,6 +224,108 @@ const ChatInterface: React.FC = () => {
     }
 
     setIsTyping(true); // Show typing indicator
+
+    // Check if the user is logged in when sending attachments
+    if (pendingFiles.length > 0) {
+      setModalState({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please log in to send messages with attachments.",
+        actionText: "Log in",
+        onAction: redirectToLogin,
+      });
+      return;
+    }
+
+    // Check if the message is a product search or requires assistance
+    try {
+      const decideResponse = await fetch("/api/decide", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ messages: [userMessage] }),
+      });
+
+      if (!decideResponse.ok) {
+        throw new Error(`HTTP error! Status: ${decideResponse.status}`);
+      }
+
+      const decideData = await decideResponse.json();
+      const { needs_assistance } = decideData;
+
+      console.log("Decision API Response:", decideData);
+
+      if (!needs_assistance) {
+        const trimmedTerm = input.trim();
+      
+        if (!trimmedTerm) {
+          setSearchResults(null);
+          return;
+        }
+      
+        // Set loading state before fetching
+        setSearchResults({
+          query: trimmedTerm,
+          results: [],
+          isLoading: true, // Add loading state
+        });
+      
+        try {
+          // Redirect to the search page with the search term as a query parameter
+          router.push(`/search?term=${encodeURIComponent(trimmedTerm)}`);
+      
+          const response = await fetch(`${apiEndpoint}/shop/search/?query=${encodeURIComponent(trimmedTerm)}`);
+      
+          if (!response.ok) {
+            throw new Error(`Search request failed with status: ${response.status}`);
+          }
+      
+          const data = await response.json();
+          // console.log(data);
+      
+          // Check if the response is an array and has results
+          if (Array.isArray(data) && data.length > 0) {
+            setSearchResults({
+              query: trimmedTerm,
+              results: data,
+              isLoading: false, // Remove loading state
+            });
+          }
+          //  else {
+          //   setSearchResults({
+          //     query: trimmedTerm,
+          //     results: [],
+          //     isLoading: false, // Remove loading state
+          //   });
+          // }
+        } catch (error) {
+          console.error("Search error:", error);
+      
+          // Handle error state
+          setSearchResults({
+            query: trimmedTerm,
+            results: [],
+            isLoading: false, // Remove loading state
+          });
+        }
+      
+        return;
+      }
+       else {
+        setModalState({
+          isOpen: true,
+          title: "Login Required",
+          message: "Please log in to request assistance.",
+          actionText: "Log in",
+          onAction: redirectToLogin,
+        });
+      }
+    } catch (error) {
+      console.error("Error with decision endpoint:", error);
+      return;
+    }
+
 
     try {
       let recentMessages: ConversationMessage[] = [];
@@ -419,29 +543,42 @@ const ChatInterface: React.FC = () => {
     }
   }, [conversationMessages]);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        delayChildren: 0.2,
-        staggerChildren: 0.1,
-      },
-    },
-  };
+  // const containerVariants = {
+  //   hidden: { opacity: 0 },
+  //   visible: {
+  //     opacity: 1,
+  //     transition: {
+  //       delayChildren: 0.2,
+  //       staggerChildren: 0.1,
+  //     },
+  //   },
+  // };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 15,
-      },
-    },
-  };
+  // const itemVariants = {
+  //   hidden: { y: 20, opacity: 0 },
+  //   visible: {
+  //     y: 0,
+  //     opacity: 1,
+  //     transition: {
+  //       type: "spring",
+  //       stiffness: 300,
+  //       damping: 15,
+  //     },
+  //   },
+  // };
+
+  // const formatPrice = (price: number) => {
+  //   // Convert to string and split decimal if exists
+  //   const [integerPart, decimalPart] = price.toString().split('.');
+
+  //   // Add spaces for thousands
+  //   const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+  //   // Combine back with decimal if it exists
+  //   return decimalPart
+  //     ? `${formattedInteger}.${decimalPart}`
+  //     : formattedInteger;
+  // };
 
   return (
     <motion.div
@@ -450,6 +587,14 @@ const ChatInterface: React.FC = () => {
       transition={{ duration: 0.5 }}
       className="flex flex-col min-h-screen pt-16 bg-white"
     >
+      <Modal
+        isOpen={modalState.isOpen}
+        title={modalState.title}
+        message={modalState.message}
+        actionText={modalState.actionText}
+        onClose={closeModal}
+        onAction={modalState.onAction}
+      />
       <div className="w-full max-w-5xl mx-auto flex-grow flex flex-col mt-8">
         {/* Container with centered content */}
 
@@ -581,7 +726,7 @@ const ChatInterface: React.FC = () => {
             )}
 
             {/* Render search results if available */}
-            {searchResults &&
+            {/* {searchResults &&
             searchResults.results &&
             searchResults.results.length > 0 ? (
               <div className="bg-white px-4 py-6 rounded-lg shadow-md flex-grow mt-4">
@@ -608,8 +753,6 @@ const ChatInterface: React.FC = () => {
                             href={`/product?url=${encodeURIComponent(
                               result.url
                             )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
                           >
                             <motion.div
                               variants={itemVariants}
@@ -636,7 +779,7 @@ const ChatInterface: React.FC = () => {
                                 </p>
                                 <div className="flex justify-between items-center pt-2">
                                   <span className="text-green-600 font-bold text-sm">
-                                    ${result.price}
+                                    FCFA {formatPrice(result.price)}
                                   </span>
                                   <ArrowRightIcon className="h-5 w-5 text-gray-400" />
                                 </div>
@@ -669,7 +812,7 @@ const ChatInterface: React.FC = () => {
               </div>
             ) : (
               <div></div>
-            )}
+            )} */}
 
             {/* Typing Indicator */}
             {isTyping && (
