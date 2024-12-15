@@ -8,11 +8,12 @@ export default function Home() {
     const {isLoggedIn} = useChatStore();
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="max-h-screen bg-gray-50 flex flex-row">
       <Header />
+      <div className="sm:block hidden">
+      {isLoggedIn && <SideBar />}
+      </div>
       <ChatInterface />
-      {isLoggedIn && <SideBar />} 
-      {/* <SideBar /> */}
     </main>
   );
 }
