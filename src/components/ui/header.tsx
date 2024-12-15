@@ -224,7 +224,7 @@ const Header = () => {
     <>
       <Disclosure
         as="nav"
-        className="bg-white border-b-2 border-gray-200 flex-none w-full fixed"
+        className="bg-white border-b-2 border-gray-200 flex-none w-full top-0 fixed"
       >
         <div className="mx-auto max-w-full px-2 sm:px-6 lg:px-24">
           <div className="relative flex h-16 items-center justify-between">

@@ -439,6 +439,7 @@ const ChatInterface: React.FC = () => {
         }
       }
 
+
       setIsTyping(false); // Stop typing indicator
       setIsSearching(false);
     } catch (error) {
@@ -702,7 +703,7 @@ const ChatInterface: React.FC = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="h-screen flex flex-col px-0 pt-24 md:pt-32 bg-white md:px-40"
+      className="h-screen flex flex-col flex-auto px-0 pt-24 md:pt-32 bg-white md:px-40"
     >
       <Modal
         isOpen={modalState.isOpen}
