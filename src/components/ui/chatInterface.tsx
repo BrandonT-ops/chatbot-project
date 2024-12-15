@@ -194,6 +194,7 @@ const ChatInterface: React.FC = () => {
         url: URL.createObjectURL(file), // Generate a local URL for the file
       }));
 
+
     const isJson = images.length > 0 || files.length > 0;
 
     const userMessage: ConversationMessage = {
@@ -239,7 +240,7 @@ const ChatInterface: React.FC = () => {
     }
 
     // Check if the message is a product search or requires assistance
-    if (firstMessage) {
+    if (firstMessage || !isLoggedIn) {
       try {
         const decideResponse = await fetch("/api/decide", {
           method: "POST",
@@ -437,7 +438,12 @@ const ChatInterface: React.FC = () => {
             );
           }
         }
+      }else{
+        
       }
+
+      //refreshing screen after input of a message or addition to a conversation
+
 
 
       setIsTyping(false); // Stop typing indicator
@@ -602,7 +608,7 @@ const ChatInterface: React.FC = () => {
       </div>
     );
   };
-
+  
   // const handleClearChat = () => {
   //   clearMessages();
   //   clearConversationMessages();
@@ -714,7 +720,7 @@ const ChatInterface: React.FC = () => {
         onAction={modalState.onAction}
       />
       {/* Container with centered content */}
-      <div className="flex-auto bg-white overflow-y-auto -mt-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100   rounded-lg p-6">
+      <div className="flex-auto bg-white overflow-y-auto -mt-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100  rounded-lg p-6">
         {/* Title */}
 
         <motion.h1
