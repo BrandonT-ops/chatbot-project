@@ -240,7 +240,7 @@ const ChatInterface: React.FC = () => {
     }
 
     // Check if the message is a product search or requires assistance
-    if (firstMessage || !isLoggedIn) {
+    if (firstMessage || !isLoggedIn ) {
       try {
         const decideResponse = await fetch("/api/decide", {
           method: "POST",

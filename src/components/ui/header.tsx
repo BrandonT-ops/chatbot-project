@@ -24,7 +24,9 @@ import {
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { useChatStore } from "@/lib/store";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, 
+   useSearchParams
+ } from "next/navigation";
 
 const navigation = [
   { name: "Dashboard", href: "#", current: true },
@@ -84,88 +86,100 @@ const Header = () => {
     // Navigate to the search page with the search term as a query parameter
     router.push(`/search?term=${encodeURIComponent(trimmedTerm)}`);
 
-    try {
-      const response = await fetch(
-        `${apiEndpoint}/shop/search/?query=${encodeURIComponent(trimmedTerm)}`
-      );
+    // try {
+    //   const response = await fetch(
+    //     `${apiEndpoint}/shop/search/?query=${encodeURIComponent(trimmedTerm)}`
+    //   );
 
-      if (!response.ok) {
-        throw new Error(
-          `Search request failed with status: ${response.status}`
-        );
-      }
+    //   if (!response.ok) {
+    //     throw new Error(
+    //       `Search request failed with status: ${response.status}`
+    //     );
+    //   }
 
-      const data = await response.json();
-      // console.log(data);
+    //   const data = await response.json();
+    //   // console.log(data);
 
-      // Check if the response is an array
-      if (Array.isArray(data) && data.length > 0) {
-        setSearchResults({
-          query: trimmedTerm,
-          results: data,
-          isLoading: false, // Remove loading state
-        });
-      } else {
-        setSearchResults({
-          query: trimmedTerm,
-          results: [],
-          isLoading: false, // Remove loading state
-        });
-      }
-    } catch (error) {
-      console.error("Search error:", error);
+    //   // Check if the response is an array
+    //   if (Array.isArray(data) && data.length > 0) {
+    //     setSearchResults({
+    //       query: trimmedTerm,
+    //       results: data,
+    //       isLoading: false, // Remove loading state
+    //     });
+    //   } else {
+    //     setSearchResults({
+    //       query: trimmedTerm,
+    //       results: [],
+    //       isLoading: false, // Remove loading state
+    //     });
+    //   }
+    // } catch (error) {
+    //   console.error("Search error:", error);
 
-      // Handle error state
-      setSearchResults({
-        query: trimmedTerm,
-        results: [],
-        isLoading: false, // Remove loading state
-      });
-    }
+    //   // Handle error state
+    //   setSearchResults({
+    //     query: trimmedTerm,
+    //     results: [],
+    //     isLoading: false, // Remove loading state
+    //   });
+    // }
   };
 
   useEffect(() => {
     const term = searchParams.get("term") || ""; // Get the `term` from URL
     const trimmedTerm = term.trim();
-
-    if (trimmedTerm) {
-      // Use a flag to track if initial search has been performed
-      setSearchTerm(trimmedTerm); // Update the input field
-
-      const performSearch = async () => {
-        try {
-          const response = await fetch(
-            `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
-              trimmedTerm
-            )}`
-          );
-
-          if (!response.ok) {
-            throw new Error(
-              `Search request failed with status: ${response.status}`
-            );
-          }
-
-          const data = await response.json();
-          setSearchResults({
-            query: trimmedTerm,
-            results: Array.isArray(data) ? data : [],
-            isLoading: false, // Always set to false after search completes
-          });
-        } catch (error) {
-          console.error("Search error:", error);
-          setSearchResults({
-            query: trimmedTerm,
-            results: [],
-            isLoading: false, // Set to false even on error
-          });
-        }
-      };
-
-      performSearch();
+  
+    if (!trimmedTerm) {
+      // If the term is empty, reset the state and prevent the search
+      setSearchTerm(""); // Clear the input field
+      setSearchResults({
+        query: "",
+        results: [],
+        isLoading: false, // No loading state
+      });
+      return; // Exit early
     }
-  }, [searchParams, apiEndpoint, setSearchResults]); // Reduced dependencies
-
+  
+    // Update the input field and set loading state
+    setSearchTerm(trimmedTerm);
+    setSearchResults({
+      query: trimmedTerm,
+      results: [],
+      isLoading: true,
+    });
+  
+    const performSearch = async () => {
+      try {
+        const response = await fetch(
+          `${apiEndpoint}/shop/search/?query=${encodeURIComponent(trimmedTerm)}`
+        );
+  
+        if (!response.ok) {
+          throw new Error(
+            `Search request failed with status: ${response.status}`
+          );
+        }
+  
+        const data = await response.json();
+        setSearchResults({
+          query: trimmedTerm,
+          results: Array.isArray(data) ? data : [],
+          isLoading: false,
+        });
+      } catch (error) {
+        console.error("Search error:", error);
+        setSearchResults({
+          query: trimmedTerm,
+          results: [],
+          isLoading: false,
+        });
+      }
+    };
+  
+    performSearch();
+  }, [searchParams, apiEndpoint, setSearchResults]);
+  
   const handleSignOut = () => {
     clearUserData();
     clearUserToken();
