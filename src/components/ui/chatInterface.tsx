@@ -423,7 +423,65 @@ const ChatInterface: React.FC = () => {
             throw new Error(data.error);
           }
 
-          // Handle AI response and continue as needed...
+          if (data.message?.send_request) {
+            console.log("Triggering search for:", data.message.query);
+  
+            try {
+              const searchResponse = await fetch(
+                `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
+                  data.message.query
+                )}`
+              );
+  
+              if (!searchResponse.ok) {
+                throw new Error(
+                  `Search API failed with status: ${searchResponse.status}`
+                );
+              }
+  
+              if (searchResponse.ok) {
+                const searchData = await searchResponse.json();
+  
+                const chatSearch: SearchResultType = {
+                  query: data.message.query,
+                  results: searchData,
+                  isLoading: false,
+                };
+  
+                setSearchResults(chatSearch);
+                console.log("Top 3 search results:", searchData.slice(0, 3));
+  
+                if (userToken?.key) {
+                  await addMessageToConversation(
+                    conversation!.id,
+                    chatSearch, // Pass search results
+                    false,
+                    userToken.key,
+                    true // is_json = true
+                  );
+                }
+              } else {
+                console.error("Search API failed:", searchResponse.status);
+              }
+            } catch (searchError) {
+              console.error("Error during search:", searchError);
+            }
+          } else {
+            const aiMessage: ConversationMessage = {
+              is_user: false,
+              content: data.message!.user_answer,
+            };
+  
+            if (userToken!.key ) {
+              await addMessageToConversation(
+                conversation!.id,
+                aiMessage.content,
+                false,
+                userToken.key,
+                false // is_json = false
+              );
+            } 
+          }
         }
 
         setIsTyping(false); // Stop typing indicator
@@ -452,6 +510,7 @@ const ChatInterface: React.FC = () => {
     setSearchResults,
     conversationMessages,
     addMessage,
+    
     createConversation,
     userToken,
     isStartState,
@@ -505,7 +564,9 @@ const ChatInterface: React.FC = () => {
                     >
                       <div className="h-48 w-full flex items-center justify-center bg-gray-50 p-4">
                         <Image
-                          src={result.image_url}
+                          src={`/api/proxy/image-proxy?url=${encodeURIComponent(
+                            result.image_url
+                          )}`}
                           alt={result.name}
                           width={250}
                           height={250}
@@ -993,8 +1054,11 @@ const ChatInterface: React.FC = () => {
           )}
         </div>
 
-        {/* File Preview */}
-        {pendingFiles.length > 0 && (
+      
+      </div>
+      <div className="flex-none bottom-0 left-0 w-full bg-white shadow-lg p-4 border-t">
+          {/* File Preview */}
+          {pendingFiles.length > 0 && (
           <div className="mb-4 flex flex-row gap-2 overflow-x-auto py-2 px-1 pb-48 md:pb-32">
             {pendingFiles.map((file, index) => (
               <motion.div
@@ -1062,8 +1126,7 @@ const ChatInterface: React.FC = () => {
             ))}
           </div>
         )}
-      </div>
-      <div className="flex-none bottom-0 left-0 w-full bg-white shadow-lg p-4 border-t">
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

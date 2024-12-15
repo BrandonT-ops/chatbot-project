@@ -321,6 +321,7 @@ export const useChatStore = create<ChatStore>()(
       
         try {
           // Send the message to the backend
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const response = await fetch(
             `${apiEndpoint}/chatbot/chat/${conversationId}/`,
             {
@@ -334,18 +335,18 @@ export const useChatStore = create<ChatStore>()(
           );
       
           // Parse the response
-          const data: ConversationMessage = await response.json();
+          // const data: ConversationMessage = await response.json();
       
-          // Update the state with the server-confirmed message (if necessary)
-          set((state) => ({
-            conversationMessages: [
-              ...(state.conversationMessages || []),
-              {
-                content: data.content, // Use server-provided content
-                is_user: data.is_user,
-              },
-            ],
-          }));
+          // // // Update the state with the server-confirmed message (if necessary)
+          // // set((state) => ({
+          // //   conversationMessages: [
+          // //     ...(state.conversationMessages || []),
+          // //     {
+          // //       content: data.content, // Use server-provided content
+          // //       is_user: data.is_user,
+          // //     },
+          // //   ],
+          // // }));
         } catch (error) {
           console.error("Error adding message to conversation:", error);
       
