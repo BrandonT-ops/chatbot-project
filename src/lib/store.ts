@@ -117,13 +117,13 @@ interface ChatStore {
   // setChatSearchResults: (results: ChatProductSearchResult | null ) => void;
 
   conversation: Conversation | null;
-  setConversation: (conversationId: string) => Conversation | undefined;
+  setConversation: (conversationId: string | null) => Conversation | undefined;
 
   conversations: Conversation[] | null;
-  setConversations: (conversations: Conversation[]) => void;
+  setConversations: (conversations: Conversation[] | null) => void;
 
   conversationMessages: ConversationMessage[] | null;
-  setConversationMessages: (messages: ConversationMessage[]) => void;
+  setConversationMessages: (messages: ConversationMessage[] | null) => void;
 
   fetchConversations: (token: string | undefined) => Promise<void>;
   fetchConversationMessages: (
@@ -214,15 +214,15 @@ export const useChatStore = create<ChatStore>()(
       clearSearch: () => set({ searchResults: null }),
 
       conversations: [],
-      setConversations: (conversations: Conversation[]) =>
+      setConversations: (conversations: Conversation[] | null) =>
         set({ conversations }),
 
       conversationMessages: [],
-      setConversationMessages: (messages: ConversationMessage[]) =>
+      setConversationMessages: (messages: ConversationMessage[] | null) =>
         set({ conversationMessages: messages }),
 
       conversation: null,
-      setConversation: (conversationId: string) => {
+      setConversation: (conversationId: string | null) => {
         const state = get();
         const foundConversation = state.conversations?.find(
           (conv) => conv.id === conversationId

@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  ChangeEvent,
+} from "react";
 import {
   useChatStore,
   // MessageType,
@@ -39,6 +45,10 @@ interface APIResponse {
   };
   error?: string;
 }
+interface UploadedFile {
+  name: string;
+  url: string;
+}
 
 const ChatInterface: React.FC = () => {
   const router = useRouter();
@@ -48,6 +58,7 @@ const ChatInterface: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [, setFilePath] = useState<string | null>(null);
   const messageContainerRef = useRef<HTMLDivElement | null>(null);
   const { addMessage, conversationMessages } = useChatStore();
   const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
@@ -92,50 +103,35 @@ const ChatInterface: React.FC = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files ? Array.from(event.target.files) : [];
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    // Validate file types and sizes
-    const validFiles = files.filter((file) => {
-      const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/svg+xml",
-        "application/pdf",
-        "text/plain",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ];
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      try {
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
 
-      if (!allowedTypes.includes(file.type)) {
-        setError(`Unsupported file type: ${file.name}`);
-        return false;
+        if (!response.ok) {
+          const errorData = await response.json();
+          setError(errorData.error || "File upload failed");
+          return;
+        }
+
+        const data = await response.json();
+        setFilePath(data.filename);
+        setError(null);
+      } catch (error) {
+        console.log(error);
+        setError("An error occurred while uploading the file");
       }
-
-      if (file.size > maxSize) {
-        setError(`File too large: ${file.name} (max 5MB)`);
-        return false;
-      }
-
-      return true;
-    });
-
-    // Add valid files to state, avoiding duplicates
-    setPendingFiles((prev) => {
-      const uniqueFiles = validFiles.filter(
-        (file) =>
-          !prev.some(
-            (prevFile) =>
-              prevFile.name === file.name && prevFile.size === file.size
-          )
-      );
-      return [...prev, ...uniqueFiles];
-    });
+    }
 
     event.target.value = ""; // Reset the input to allow re-adding the same file
   };
-
   const removeFile = (index: number) => {
     setPendingFiles((prev) => prev.filter((_, i) => i !== index));
   };
@@ -183,29 +179,17 @@ const ChatInterface: React.FC = () => {
   const handleSendMessage = useCallback(async () => {
     if (!input.trim() && pendingFiles.length === 0) return; // Prevent sending empty messages and no files
 
-    const images = pendingFiles
-      .filter((file) => file.type.startsWith("image/"))
-      .map((imageFile) => URL.createObjectURL(imageFile)); // Convert image File to a local URL
-
-    const files = pendingFiles
-      .filter((file) => !file.type.startsWith("image/"))
-      .map((file) => ({
-        name: file.name,
-        url: URL.createObjectURL(file), // Generate a local URL for the file
-      }));
-
-
-    const isJson = images.length > 0 || files.length > 0;
-
-    const userMessage: ConversationMessage = {
-      is_user: true,
-      content: input,
-      images, // Assign image URLs
-      files, // Assign file metadata
-      is_json: isJson, // Set is_json based on the presence of files or images
-    };
-
-    setError(null);
+    // Ensure the user is logged in if sending attachments
+    if (pendingFiles.length > 0 && !isLoggedIn) {
+      setModalState({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please log in to send messages with attachments.",
+        actionText: "Log in",
+        onAction: redirectToLogin,
+      });
+      return;
+    }
 
     if (isStartState && isLoggedIn && !firstMessage) {
       setFirstMessage(input);
@@ -213,6 +197,74 @@ const ChatInterface: React.FC = () => {
     }
 
     setInput("");
+
+    // Create a FormData object to send the files
+    const formData = new FormData();
+    pendingFiles.forEach((file) => {
+      formData.append("files", file); // Append each file to FormData
+    });
+
+    // Upload the files to the server and get the URLs
+
+    try {
+      if(pendingFiles.length > 0){
+      const uploadResponse = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+    
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed with status: ${uploadResponse.status}`);
+      }
+
+      const uploadData = await uploadResponse.json();
+
+      // Update images and files with the URLs from the server response
+      if (uploadData.files) {
+        uploadData.files.forEach((uploadedFile: UploadedFile) => {
+          if (uploadedFile.url) {
+            if (images.includes(uploadedFile.name)) {
+              // Update image URLs
+              userMessage.images!.push(uploadedFile.url);
+            } else {
+              // Update non-image file URLs
+              const file = userMessage.files!.find(
+                (f) => f.name === uploadedFile.name
+              );
+              if (file) {
+                file.url = uploadedFile.url;
+              }
+            }
+          }
+        });
+      }
+
+    }
+      
+      const images = pendingFiles
+      .filter((file) => file.type.startsWith("image/"))
+      .map((imageFile) => imageFile.name); // We will update this with the URLs after upload
+
+    const files = pendingFiles
+      .filter((file) => !file.type.startsWith("image/"))
+      .map((file) => ({
+        name: file.name,
+        url: "", // This will be updated with the URL from the server
+      }));
+
+    const isJson = images.length > 0 || files.length > 0;
+
+    const userMessage: ConversationMessage = {
+      is_user: true,
+      content: input,
+      images, // Initially empty, will update after upload
+      files, // Initially empty, will update after upload
+      is_json: isJson, // Set is_json based on the presence of files or images
+    };
+
+    setError(null);
+
 
     if (userToken?.key) {
       if (firstMessage) {
@@ -239,225 +291,157 @@ const ChatInterface: React.FC = () => {
       return;
     }
 
-    // Check if the message is a product search or requires assistance
-    if (firstMessage || !isLoggedIn ) {
-      try {
-        const decideResponse = await fetch("/api/decide", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ messages: [userMessage] }),
-        });
+      // console.log("Uploaded files:", uploadData.files);
 
-        if (!decideResponse.ok) {
-          throw new Error(`HTTP error! Status: ${decideResponse.status}`);
-        }
+      // Now proceed with the rest of your logic (e.g., product search or assistance)
+      // Send the user message with updated images/URLs
 
-        const decideData = await decideResponse.json();
-        const { needs_assistance } = decideData;
-
-        if (needs_assistance) {
-          setIsTyping(true);
-        } else {
-          setIsSearching(true);
-        }
-        console.log("Decision API Response:", decideData);
-
-        if (!needs_assistance) {
-          const trimmedTerm = input.trim();
-
-          if (!trimmedTerm) {
-            setSearchResults(null);
-            return;
-          }
-
-          // Set loading state before fetching
-          setSearchResults({
-            query: trimmedTerm,
-            results: [],
-            isLoading: true, // Add loading state
+      if (!isLoggedIn) {
+        try {
+          const decideResponse = await fetch("/api/decide", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ messages: [userMessage] }),
           });
 
-          try {
-            // Redirect to the search page with the search term as a query parameter
-            router.push(`/search?term=${encodeURIComponent(trimmedTerm)}`);
+          if (!decideResponse.ok) {
+            throw new Error(`HTTP error! Status: ${decideResponse.status}`);
+          }
 
-            const response = await fetch(
-              `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
-                trimmedTerm
-              )}`
-            );
+          const decideData = await decideResponse.json();
+          const { needs_assistance } = decideData;
 
-            if (!response.ok) {
-              throw new Error(
-                `Search request failed with status: ${response.status}`
-              );
+          if (needs_assistance) {
+            setIsTyping(true);
+          } else {
+            setIsSearching(true);
+          }
+          console.log("Decision API Response:", decideData);
+
+          if (!needs_assistance) {
+            const trimmedTerm = input.trim();
+
+            if (!trimmedTerm) {
+              setSearchResults(null);
+              return;
             }
 
-            const data = await response.json();
-            // console.log(data);
-
-            // Check if the response is an array and has results
-            if (Array.isArray(data) && data.length > 0) {
-              setSearchResults({
-                query: trimmedTerm,
-                results: data,
-                isLoading: false, // Remove loading state
-              });
-            }
-            //  else {
-            //   setSearchResults({
-            //     query: trimmedTerm,
-            //     results: [],
-            //     isLoading: false, // Remove loading state
-            //   });
-            // }
-          } catch (error) {
-            console.error("Search error:", error);
-
-            // Handle error state
+            // Set loading state before fetching
             setSearchResults({
               query: trimmedTerm,
               results: [],
-              isLoading: false, // Remove loading state
+              isLoading: true, // Add loading state
             });
-          }
 
-          return;
-        } else if (needs_assistance && !isLoggedIn) {
-          setModalState({
-            isOpen: true,
-            title: "Login Required",
-            message: "Please log in to request assistance.",
-            actionText: "Log in",
-            onAction: redirectToLogin,
-          });
-        }
-      } catch (error) {
-        console.error("Error with decision endpoint:", error);
-        return;
-      }
-    }
+            try {
+              // Redirect to the search page with the search term as a query parameter
+              router.push(`/search?term=${encodeURIComponent(trimmedTerm)}`);
 
-    try {
-      let recentMessages: ConversationMessage[] = [];
-
-      if (conversation!.id && userToken!.key) {
-        await fetchConversationMessages(conversation!.id, userToken!.key);
-
-        const allMessages = conversationMessages || [];
-        recentMessages = allMessages.slice(-10);
-      }
-
-      if (userToken?.key) {
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            messages: [...recentMessages, userMessage],
-            metadata: {
-              fileCount: pendingFiles.length,
-              inputLength: input.length,
-            },
-            images: userMessage.images, // Include image URLs
-            files: userMessage.files, // Include file metadata
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data: APIResponse = await response.json();
-        console.log("AI Response:", data);
-
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        // Check if send_request is true and call handleSearch
-        if (data.message?.send_request) {
-          console.log("Triggering search for:", data.message.query);
-
-          try {
-            const searchResponse = await fetch(
-              `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
-                data.message.query
-              )}`
-            );
-
-            if (!searchResponse.ok) {
-              throw new Error(
-                `Search API failed with status: ${searchResponse.status}`
+              const response = await fetch(
+                `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
+                  trimmedTerm
+                )}`
               );
-            }
 
-            if (searchResponse.ok) {
-              const searchData = await searchResponse.json();
-
-              const chatSearch: SearchResultType = {
-                query: data.message.query,
-                results: searchData,
-                isLoading: false,
-              };
-
-              setSearchResults(chatSearch);
-              console.log("Top 3 search results:", searchData.slice(0, 3));
-
-              if (userToken?.key) {
-                await addMessageToConversation(
-                  conversation!.id,
-                  chatSearch, // Pass search results
-                  false,
-                  userToken.key,
-                  true // is_json = true
+              if (!response.ok) {
+                throw new Error(
+                  `Search request failed with status: ${response.status}`
                 );
               }
-            } else {
-              console.error("Search API failed:", searchResponse.status);
-            }
-          } catch (searchError) {
-            console.error("Error during search:", searchError);
-          }
-        } else {
-          const aiMessage: ConversationMessage = {
-            is_user: false,
-            content: data.message!.user_answer,
-          };
 
-          if (userToken!.key) {
-            await addMessageToConversation(
-              conversation!.id,
-              aiMessage.content,
-              false,
-              userToken.key,
-              false // is_json = false
-            );
+              const data = await response.json();
+
+              if (Array.isArray(data) && data.length > 0) {
+                setSearchResults({
+                  query: trimmedTerm,
+                  results: data,
+                  isLoading: false, // Remove loading state
+                });
+              }
+            } catch (error) {
+              console.error("Search error:", error);
+              setSearchResults({
+                query: trimmedTerm,
+                results: [],
+                isLoading: false, // Remove loading state
+              });
+            }
+
+            return;
+          } else if (needs_assistance && !isLoggedIn) {
+            setModalState({
+              isOpen: true,
+              title: "Login Required",
+              message: "Please log in to request assistance.",
+              actionText: "Log in",
+              onAction: redirectToLogin,
+            });
           }
+        } catch (error) {
+          console.error("Error with decision endpoint:", error);
+          return;
         }
-      }else{
-        
       }
 
-      //refreshing screen after input of a message or addition to a conversation
+      try {
+        let recentMessages: ConversationMessage[] = [];
 
+        if (conversation!.id && userToken!.key) {
+          await fetchConversationMessages(conversation!.id, userToken!.key);
 
+          const allMessages = conversationMessages || [];
+          recentMessages = allMessages.slice(-10);
+        }
 
-      setIsTyping(false); // Stop typing indicator
-      setIsSearching(false);
+        if (userToken?.key) {
+          const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              messages: [...recentMessages, userMessage],
+              metadata: {
+                fileCount: pendingFiles.length,
+                inputLength: input.length,
+              },
+              images: userMessage.images, // Include image URLs
+              files: userMessage.files, // Include file metadata
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          const data: APIResponse = await response.json();
+          console.log("AI Response:", data);
+
+          if (data.error) {
+            throw new Error(data.error);
+          }
+
+          // Handle AI response and continue as needed...
+        }
+
+        setIsTyping(false); // Stop typing indicator
+        setIsSearching(false);
+      } catch (error) {
+        console.error("Error:", error);
+        setIsTyping(false);
+      } finally {
+        setPendingFiles([]);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""; // Clear file input
+        }
+        setIsTyping(false);
+        setIsSearching(false);
+      }
     } catch (error) {
       console.error("Error:", error);
       setIsTyping(false);
-    } finally {
-      setPendingFiles([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Clear file input
-      }
-      setIsTyping(false);
-      setIsSearching(false);
     }
   }, [
     input,
@@ -465,6 +449,7 @@ const ChatInterface: React.FC = () => {
     addMessageToConversation,
     fetchConversationMessages,
     conversation,
+    setSearchResults,
     conversationMessages,
     addMessage,
     createConversation,
@@ -477,6 +462,16 @@ const ChatInterface: React.FC = () => {
   ]);
 
   const renderMessageContent = (msg: ConversationMessage) => {
+    if (
+      !msg.content ||
+      (msg.images &&
+        msg.images.length === 0 &&
+        msg.files &&
+        msg.files.length === 0)
+    ) {
+      return; // If the message is empty, return nothing (null)
+    }
+
     // Check if the message contains search results (JSON with elements)
     const isJsonContent = msg.is_json && typeof msg.content === "object";
 
@@ -608,55 +603,6 @@ const ChatInterface: React.FC = () => {
       </div>
     );
   };
-  
-  // const handleClearChat = () => {
-  //   clearMessages();
-  //   clearConversationMessages();
-  //   setFirstMessage(null);
-  // };
-
-  // Syncing not yet done
-  // useEffect(() => {
-  //   const conversationId = conversation?.id; // Replace with actual conversation ID
-  //   const userTokening = userToken?.key; // Replace with the logged-in user's token
-
-  //   if (userTokening && !hasSyncedMessages) {
-  //     setHasSyncedMessages(false);
-  //     // console.log(hasSyncedMessages);
-  //     syncMessagesToBackend(conversationId ?? "", userToken.key);
-  //     // clearMessages();
-  //     clearConversationMessages();
-  //     // fetchConversationMessages(conversationId ?? "", userToken.key);
-  //   }
-  // }, [userToken, conversation,]);
-
-  // const syncMessagesToBackend = async (
-  //   conversationId: string ,
-  //   userToken: string
-  // ) => {
-  //   // const state = useChatStore.getState();
-  //   const messages = conversationMessages || []; // Get stored messages
-  //   if (hasSyncedMessages) {
-  //     console.log("Messages already synced.");
-  //     return;
-  //   }
-  //   for (const message of messages) {
-  //     try {
-  //       // Send each message to the backend
-  //       await addMessageToConversation(
-  //         conversationId,
-  //         message.content,
-  //         message.is_user,
-  //         userToken
-  //       );
-  //       console.log("Message synced:", message);
-  //       setHasSyncedMessages(true);
-  //     } catch (error) {
-  //       console.error("Error syncing message:", message, error);
-  //     }
-  //   }
-  //   setHasSyncedMessages(true);
-  // };
 
   useEffect(() => {
     if (messageContainerRef.current) {
@@ -1122,18 +1068,16 @@ const ChatInterface: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-         className="flex md:flex-row md:items-center sm:gap-4 gap-2 max-w-3xl mx-auto"
+          className="flex md:flex-row md:items-center sm:gap-4 gap-2 max-w-3xl mx-auto"
         >
           {/* Hidden file input */}
           <input
             type="file"
             ref={fileInputRef}
-            multiple
             onChange={handleFileChange}
             className="hidden"
             accept="image/*,application/pdf,.doc,.docx,.txt,.png,.svg,.jpg,.jpeg"
           />
-
           {/* Text input */}
           <input
             type="text"
@@ -1173,7 +1117,7 @@ const ChatInterface: React.FC = () => {
           </div>
         </motion.div>
         {/* Copyright */}
-        <div className="text-center text-gray-500 py-4 mt-1 text-xs sm:block hidden" >
+        <div className="text-center text-gray-500 py-4 mt-1 text-xs sm:block hidden">
           © {new Date().getFullYear()} Richenel&apos;s AI Agency. All rights
           reserved. By using this app you accept the&nbsp;
           <Link href="/conditions" className="text-gray-900 hover:underline">
@@ -1186,11 +1130,11 @@ const ChatInterface: React.FC = () => {
         </div>
 
         <div className="text-center text-gray-500 py-4 mt-1 text-xs sm:hidden block">
-          © {new Date().getFullYear()} Richenel&apos;s AI Agency. All rights&nbsp;reserved.
+          © {new Date().getFullYear()} Richenel&apos;s AI Agency. All
+          rights&nbsp;reserved.
           <Link href="/conditions" className="text-gray-900 hover:underline">
             Terms and Conditions&nbsp;
           </Link>
-          
           <Link href="/terms" className="text-gray-900 hover:underline">
             Privacy Policy
           </Link>

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 const GoogleSignIn: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [isTermsChecked, setIsTermsChecked] = useState(false);
-  const { setUserToken, setUserData, setIsLoggedIn } = useChatStore();
+  const { setUserToken, setUserData, setIsLoggedIn, setFirstMessage, setConversation, setConversationMessages, setSearchResults} = useChatStore();
   const router = useRouter();
   const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
@@ -65,7 +65,10 @@ const GoogleSignIn: React.FC = () => {
         });
        
         setIsLoggedIn(true);
-        
+        setFirstMessage(null);
+        setConversation(null);
+        setConversationMessages(null);
+        setSearchResults(null);
         
         // page refresh
         router.refresh();

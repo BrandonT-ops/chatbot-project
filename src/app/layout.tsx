@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Maguida Chatbot',
-  description: 'Simple AI-powered chatbot interface'
+  title: 'Maguida',
+  description: 'The Ultimate AI-powered Product Search application'
 }
 
 export default function RootLayout({
