@@ -4,17 +4,19 @@ import React, { useState, useEffect } from "react";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
-  PlusIcon,
-  // Cog6ToothIcon,
+   // Cog6ToothIcon,
   ArrowLeftOnRectangleIcon,
   EllipsisHorizontalIcon,
   ChatBubbleOvalLeftEllipsisIcon,
+  PlusCircleIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { useChatStore } from "@/lib/store";
+import { useRouter } from "next/navigation";
 
 const SideBar = () => {
   const [isOpen, setIsOpen] = useState(true);
+  const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   const [visibleConversations, setVisibleConversations] = useState(5);
 
@@ -46,8 +48,9 @@ const SideBar = () => {
     clearSearch();
     clearUserData();
     setIsLoggedIn(false);
-    setFirstMessage("");
+    setFirstMessage(null);
     setHasSyncedMessages(false);
+    router.push("/");
   };
 
   // Check screen size and set mobile view
@@ -95,6 +98,7 @@ const SideBar = () => {
       setIsStartState(true);
       clearMessages();
       clearConversationMessages();
+      setFirstMessage(null);
     } catch (error) {
       console.error("Error creating new conversation:", error);
     }
@@ -144,12 +148,12 @@ const SideBar = () => {
                 height={100}
                 className="object-cover w-8 h-auto rounded justify-center my-auto mr-3"
               />
-              <h2 className="text-xl font-bold text-gray-800">Maguida</h2>
+              <h2 className="text-md justify-center items-center flex font-bold text-gray-800">Maguida</h2>
             </div>
           )}
           <button
             onClick={toggleSidebar}
-            className="ml-auto p-2 bg-gray-600 hover:bg-gray-700 rounded-full"
+            className="ml-auto p-2 bg-gradient-to-r from-[#652574] to-[#C34E19] hover:opacity-50 duration-300 transition-colors rounded-full"
           >
             {isOpen ? (
               <ChevronLeftIcon className="h-5 w-5" />
@@ -164,22 +168,23 @@ const SideBar = () => {
           onClick={addNewConversation}
           className={`
             flex items-center 
-            m-4 p-2 
-            bg-gray-600 text-white 
+            m-6 p-2 
+            bg-[#ED6A1B] text-white 
             rounded-md 
-            hover:bg-gray-700 
+            hover:bg-orange-600
+            
             transition-all
-            ${!isOpen && "justify-center"}
+            ${!isOpen && "justify-left mr-2"}
           `}
         >
-          <PlusIcon className={`h-5 w-5 ${isOpen ? "mr-2" : ""}`} />
+          <PlusCircleIcon className={`h-5 w-5  ${isOpen ? "mr-2" : " "}`} />
           {isOpen && "New Conversation"}
         </button>
 
         {/* Conversation List */}
         <div className="flex-grow overflow-y-auto">
           {isOpen && (
-            <div className="mt-4 px-4 py-2 text-xs font-bold text-gray-500 uppercase">
+            <div className="mt-4 px-4 py-2 text-xs font-bold text-gray-500 uppercase flex items-center justify-center mb-4">
               Recent Conversations
             </div>
           )}
@@ -190,7 +195,7 @@ const SideBar = () => {
                 onClick={() => handleSelectConversation(conversation.id)}
                 className={`
                 p-3
-                hover:bg-gray-100
+                hover:bg-[#FDF4FF]
                 cursor-pointer
                 truncate
                 border-b
@@ -202,9 +207,9 @@ const SideBar = () => {
               `}
               >
                 {isOpen ? (
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2  px-4 ">
                     <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5 text-gray-600 flex-shrink-0" />
-                    <span className="text-sm font-normal truncate">
+                    <span className="text-sm font-normal truncate ">
                       {conversation.title}
                     </span>
                   </div>
@@ -248,7 +253,7 @@ const SideBar = () => {
         </div>
 
         {/* Bottom Actions */}
-        <div className="p-4 border-t flex  space-x-2">
+        <div className="p-4 flex  space-x-2">
           {/* <button 
             className={`
               p-2 hover:bg-gray-100 

@@ -19,3 +19,9 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* In your global styles (e.g., globals.css) */
+.custom-border {
+  border: 0.62px solid transparent; /* Create a thin border */
+  border-image: linear-gradient(180deg, #652574 0%, #ED6A1B 100%) 1; /* Apply the gradient */
+}

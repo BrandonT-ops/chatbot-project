@@ -41,10 +41,11 @@ export interface Conversation {
 }
 
 export interface ConversationMessage {
-  content: string;
+  content: string | SearchResultType ;
   is_user: boolean;
   images?: string[]; // Array to store image URLs
   files?: { name: string; url: string }[]; // Array to store file metadata
+  is_json?: boolean;
 }
 export type FileMetadata = {
   name: string;
@@ -135,9 +136,10 @@ interface ChatStore {
   ) => Promise<Conversation | void>;
   addMessageToConversation: (
     conversationId: string,
-    message: string,
+    message: string | SearchResultType ,
     is_user: boolean,
-    token: string
+    token: string,
+    is_json?: boolean
   ) => Promise<void>;
 
   // localAddMessage: (content: string, is_user: boolean) => void;
@@ -302,9 +304,10 @@ export const useChatStore = create<ChatStore>()(
 
       addMessageToConversation: async (
         conversationId: string,
-        message: string,
+        message: string | SearchResultType,
         is_user: boolean,
-        token: string
+        token: string,
+        is_json?: boolean
       ) => {
         const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
       
@@ -317,6 +320,7 @@ export const useChatStore = create<ChatStore>()(
         }));
       
         try {
+          // Send the message to the backend
           const response = await fetch(
             `${apiEndpoint}/chatbot/chat/${conversationId}/`,
             {
@@ -325,16 +329,32 @@ export const useChatStore = create<ChatStore>()(
                 Authorization: `Token ${token}`,
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ message: message, is_user: is_user }),
+              body: JSON.stringify({ message: message, is_user: is_user, is_json: is_json }),
             }
           );
       
+          // Parse the response
           const data: ConversationMessage = await response.json();
-          console.log(data);
-        
+      
+          // Update the state with the server-confirmed message (if necessary)
+          set((state) => ({
+            conversationMessages: [
+              ...(state.conversationMessages || []),
+              {
+                content: data.content, // Use server-provided content
+                is_user: data.is_user,
+              },
+            ],
+          }));
         } catch (error) {
           console.error("Error adding message to conversation:", error);
-          // Optionally handle the error state (e.g., revert optimistically added message)
+      
+          // Optionally revert optimistic update if API fails
+          set((state) => ({
+            conversationMessages: (state.conversationMessages || []).filter(
+              (msg, index, arr) => index < arr.length - 1 // Remove the last added message
+            ),
+          }));
         }
       },
       

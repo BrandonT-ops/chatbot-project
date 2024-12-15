@@ -5,27 +5,35 @@ import { ConversationMessage } from "@/lib/store";
 export async function POST(request: NextRequest) {
   try {
     // Parse the request body to get messages
-    const { messages } = await request.json();
+    const { messages, images, files } = await request.json();
 
     // Map messages to OpenAI's expected format
     const formattedMessages = messages.map((msg: ConversationMessage) => ({
       role: msg.is_user ? "user" : "assistant",
-      content: msg.content,
-      ...(msg.images ? { images: msg.images } : {}),
-      ...(msg.files ? { files: msg.files } : {}),
+      content:
+        `${msg.content}\n` +
+        (msg.images && msg.images.length > 0
+          ? `Images: ${msg.images.join(", ")}\n`
+          : "") +
+        (msg.files && msg.files.length > 0
+          ? `Files: ${msg.files
+              .map((file) => `${file.name}: ${file.url}`)
+              .join(", ")}\n`
+          : ""),
     }));
 
     // Add a system message to define the assistant's role and behavior
     formattedMessages.unshift({
       role: "system",
       content:
-        "You're an assistant who specializes in helping users search for products online. Respond in JSON format with the following structure: " +
+        "You're an assistant who specializes in helping users search for products online. You might encounter messages with image or file links. Respond in JSON format with the following structure: " +
         `{
           "user_answer": "string - The response to the user.",
           "send_request": "boolean - Whether it's time to search online.",
           "query": "string - The search keywords, if available."
-        }` +
-        "Only engage with product-related queries and avoid responding to unrelated topics.",
+        }`
+         +  "For images or files, include their descriptions in your response if relevant."+
+        "Only engage with product-related queries and avoid responding to unrelated topics." ,
     });
 
     // Send a request to the OpenAI API
@@ -51,7 +59,11 @@ export async function POST(request: NextRequest) {
 
     // Return the structured response as JSON
     return NextResponse.json({
-      message: structuredResponse,
+      message: {
+        ...structuredResponse,
+        included_images: images || [],
+        included_files: files || [],
+      },
     });
   } catch (error) {
     console.error("OpenAI API Error:", error);

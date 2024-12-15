@@ -95,6 +95,7 @@ const GoogleSignIn: React.FC = () => {
           
           // page refresh
           router.refresh();
+          router.push("/");
         })
         .catch((error) => {
           console.error("Error during authentication:", error);

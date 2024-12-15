@@ -1,10 +1,20 @@
 "use client";
 import GoogleSignIn from "@/components/ui/googlesignin";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
+import { useChatStore } from "@/lib/store";
 
 const LoginPage = () => {
   const router = useRouter();
+  const { isLoggedIn } = useChatStore();
+
+  useEffect(() => {
+    // Redirect to home if the user is already logged in
+    if (isLoggedIn) {
+      router.push("/");
+    }
+  }, [isLoggedIn, router]);
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 px-4">
       <div className="absolute top-6 left-6">
@@ -45,7 +55,7 @@ const LoginPage = () => {
 
           <div className="space-y-4">
             {/* Google Sign-In Button */}
-            <div className="w-full">
+            <div className="w-full justify-center flex items-center">
               <GoogleSignIn />
             </div>
 

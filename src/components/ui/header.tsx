@@ -173,8 +173,9 @@ const Header = () => {
     clearSearch();
     setIsLoggedIn(false);
     clearConversationMessages();
-    setFirstMessage("");
+    setFirstMessage(null);
     setHasSyncedMessages(false);
+    router.push("/");
   };
 
   // Conversation selection handler
@@ -313,7 +314,7 @@ const Header = () => {
                   {/* Profile dropdown */}
                   <Menu as="div" className="relative ml-3">
                     <div className="flex items-center">
-                      <MenuButton className="relative flex items-center rounded-full bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+                      <MenuButton className="relative flex items-center rounded-full bg-black text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                         {/* Profile Picture */}
                         {userData?.profilePicture ? (
                           <Image
@@ -363,14 +364,14 @@ const Header = () => {
                     max-w-xs 
                     px-3
                     py-2 
-                    bg-gray-600 
+                    bg-gradient-to-r from-[#652574] to-[#C34E19] 
                     text-white 
                     text-xs 
                     sm:text-sm 
                     font-medium 
                     rounded-lg 
                     shadow-md 
-                    hover:bg-gray-700 
+                  
                     transition 
                     duration-300 
                     focus:outline-none 

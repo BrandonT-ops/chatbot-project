@@ -85,9 +85,18 @@ const SearchResults = () => {
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={handleNavigation}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="bg-[#652574] text-white px-4 py-2 rounded-lg shadow-md hover:opacity-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 flex items-center space-x-2"
             >
-              Back to Chat
+              {/* Logo */}
+              <Image
+                src="/assets/white_app_logo.svg" // Replace with your logo's path
+                alt="Maguida logo"
+                width={100}
+                height={100}
+                className="w-5 h-5" // Adjust size of the logo
+              />
+              {/* Button text */}
+              <span>Back to Chat</span>
             </button>
           </div>
         </div>

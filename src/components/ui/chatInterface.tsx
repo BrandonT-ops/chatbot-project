@@ -14,8 +14,8 @@ import {
   XMarkIcon,
   UserIcon,
   TrashIcon,
-  // ExclamationCircleIcon,
-  // ArrowRightIcon,
+  ExclamationCircleIcon,
+  ArrowRightIcon,
   //InformationCircleIcon,
   // ShoppingCartIcon,
   //  MagnifyingGlassIcon,
@@ -45,6 +45,7 @@ const ChatInterface: React.FC = () => {
   const [input, setInput] = useState("");
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageContainerRef = useRef<HTMLDivElement | null>(null);
@@ -68,6 +69,7 @@ const ChatInterface: React.FC = () => {
     isStartState,
     // searchResults,
     clearMessages,
+    isLoggedIn,
   } = useChatStore();
 
   const [modalState, setModalState] = useState<{
@@ -192,16 +194,19 @@ const ChatInterface: React.FC = () => {
         url: URL.createObjectURL(file), // Generate a local URL for the file
       }));
 
-    const userMessage: ConversationMessage = {
-      is_user: true,
-      content: input,
-      images, // Assign image URLs
-      files, // Assign file metadata
-    };
+      const isJson = images.length > 0 || files.length > 0;
 
+      const userMessage: ConversationMessage = {
+        is_user: true,
+        content: input,
+        images, // Assign image URLs
+        files, // Assign file metadata
+        is_json: isJson, // Set is_json based on the presence of files or images
+      };
+   
     setError(null);
 
-    if (isStartState) {
+    if (isStartState && isLoggedIn && !firstMessage) {
       setFirstMessage(input);
       setIsStartState(false);
     }
@@ -219,14 +224,10 @@ const ChatInterface: React.FC = () => {
         true,
         userToken.key
       );
-    } else {
-      addMessage(userMessage);
-    }
-
-    setIsTyping(true); // Show typing indicator
+    } 
 
     // Check if the user is logged in when sending attachments
-    if (pendingFiles.length > 0) {
+    if (pendingFiles.length > 0 && !isLoggedIn) {
       setModalState({
         isOpen: true,
         title: "Login Required",
@@ -254,36 +255,47 @@ const ChatInterface: React.FC = () => {
       const decideData = await decideResponse.json();
       const { needs_assistance } = decideData;
 
+      if (needs_assistance) {
+        setIsTyping(true);
+      } else {
+        setIsSearching(true);
+      }
       console.log("Decision API Response:", decideData);
 
       if (!needs_assistance) {
         const trimmedTerm = input.trim();
-      
+
         if (!trimmedTerm) {
           setSearchResults(null);
           return;
         }
-      
+
         // Set loading state before fetching
         setSearchResults({
           query: trimmedTerm,
           results: [],
           isLoading: true, // Add loading state
         });
-      
+
         try {
           // Redirect to the search page with the search term as a query parameter
           router.push(`/search?term=${encodeURIComponent(trimmedTerm)}`);
-      
-          const response = await fetch(`${apiEndpoint}/shop/search/?query=${encodeURIComponent(trimmedTerm)}`);
-      
+
+          const response = await fetch(
+            `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
+              trimmedTerm
+            )}`
+          );
+
           if (!response.ok) {
-            throw new Error(`Search request failed with status: ${response.status}`);
+            throw new Error(
+              `Search request failed with status: ${response.status}`
+            );
           }
-      
+
           const data = await response.json();
           // console.log(data);
-      
+
           // Check if the response is an array and has results
           if (Array.isArray(data) && data.length > 0) {
             setSearchResults({
@@ -301,7 +313,7 @@ const ChatInterface: React.FC = () => {
           // }
         } catch (error) {
           console.error("Search error:", error);
-      
+
           // Handle error state
           setSearchResults({
             query: trimmedTerm,
@@ -309,10 +321,9 @@ const ChatInterface: React.FC = () => {
             isLoading: false, // Remove loading state
           });
         }
-      
+
         return;
-      }
-       else {
+      } else if (needs_assistance && !isLoggedIn) {
         setModalState({
           isOpen: true,
           title: "Login Required",
@@ -326,89 +337,108 @@ const ChatInterface: React.FC = () => {
       return;
     }
 
-
     try {
       let recentMessages: ConversationMessage[] = [];
 
-      if (conversation?.id && userToken?.key) {
-        await fetchConversationMessages(conversation.id, userToken.key);
+      if (conversation!.id && userToken!.key) {
+        await fetchConversationMessages(conversation!.id, userToken!.key);
 
         const allMessages = conversationMessages || [];
         recentMessages = allMessages.slice(-10);
       }
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [...recentMessages, userMessage],
-          metadata: {
-            fileCount: pendingFiles.length,
-            inputLength: input.length,
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data: APIResponse = await response.json();
-      console.log("AI Response:", data);
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      const aiMessage: ConversationMessage = {
-        is_user: false,
-        content: data.message!.user_answer,
-      };
-
       if (userToken?.key) {
-        await addMessageToConversation(
-          conversation!.id,
-          aiMessage.content,
-          false,
-          userToken.key
-        );
-      } else {
-        addMessage(aiMessage);
-      }
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: [...recentMessages, userMessage],
+            metadata: {
+              fileCount: pendingFiles.length,
+              inputLength: input.length,
+            },
+            images: userMessage.images, // Include image URLs
+            files: userMessage.files, // Include file metadata
+          }),
+        });
 
-      // Check if send_request is true and call handleSearch
-      if (data.message?.send_request) {
-        console.log("Triggering search for:", data.message.query);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
 
-        try {
-          const searchResponse = await fetch(
-            `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
-              data.message.query
-            )}`
-          );
+        const data: APIResponse = await response.json();
+        console.log("AI Response:", data);
 
-          if (searchResponse.ok) {
-            const searchData = await searchResponse.json();
+        if (data.error) {
+          throw new Error(data.error);
+        }
 
-            const chatSearch: SearchResultType = {
-              query: data.message.query,
-              results: searchData,
-              isLoading: false,
-            };
+        // Check if send_request is true and call handleSearch
+        if (data.message?.send_request) {
+          console.log("Triggering search for:", data.message.query);
 
-            setSearchResults(chatSearch);
-            console.log("Top 3 search results:", searchData.slice(0, 3));
-          } else {
-            console.error("Search API failed:", searchResponse.status);
+          try {
+            const searchResponse = await fetch(
+              `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
+                data.message.query
+              )}`
+            );
+
+            if (!searchResponse.ok) {
+              throw new Error(
+                `Search API failed with status: ${searchResponse.status}`
+              );
+            }
+
+            if (searchResponse.ok) {
+              const searchData = await searchResponse.json();
+
+              const chatSearch: SearchResultType = {
+                query: data.message.query,
+                results: searchData,
+                isLoading: false,
+              };
+
+              setSearchResults(chatSearch);
+              console.log("Top 3 search results:", searchData.slice(0, 3));
+
+              if (userToken?.key) {
+                await addMessageToConversation(
+                  conversation!.id,
+                  chatSearch, // Pass search results
+                  false,
+                  userToken.key,
+                  true // is_json = true
+                );
+              }
+            } else {
+              console.error("Search API failed:", searchResponse.status);
+            }
+          } catch (searchError) {
+            console.error("Error during search:", searchError);
           }
-        } catch (searchError) {
-          console.error("Error during search:", searchError);
+        } else {
+          const aiMessage: ConversationMessage = {
+            is_user: false,
+            content: data.message!.user_answer,
+          };
+
+          if (userToken!.key) {
+            await addMessageToConversation(
+              conversation!.id,
+              aiMessage.content,
+              false,
+              userToken.key,
+              false // is_json = false
+            );
+          } 
         }
       }
 
       setIsTyping(false); // Stop typing indicator
+      setIsSearching(false);
     } catch (error) {
       console.error("Error:", error);
       setIsTyping(false);
@@ -418,6 +448,7 @@ const ChatInterface: React.FC = () => {
         fileInputRef.current.value = ""; // Clear file input
       }
       setIsTyping(false);
+      setIsSearching(false);
     }
   }, [
     input,
@@ -437,10 +468,93 @@ const ChatInterface: React.FC = () => {
   ]);
 
   const renderMessageContent = (msg: ConversationMessage) => {
+    // Check if the message contains search results (JSON with elements)
+    const isJsonContent = msg.is_json && typeof msg.content === "object";
+
+    if (isJsonContent) {
+      const searchResults = msg.content as SearchResultType;
+      return (
+        <div className="bg-white px-4 py-6 rounded-lg shadow-md flex-grow mt-4">
+          {searchResults.results && searchResults.results.length > 0 ? (
+            <>
+              <div className="flex items-center mb-4">
+                <span className="font-semibold text-gray-800 text-lg">
+                  Search Results
+                </span>
+              </div>
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
+              >
+                {searchResults.results.slice(0, 3).map((result, index) => (
+                  <Link
+                    key={index}
+                    href={`/product?url=${encodeURIComponent(result.url)}`}
+                  >
+                    <motion.div
+                      variants={itemVariants}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:shadow-lg transition-transform cursor-pointer"
+                    >
+                      <div className="h-48 w-full flex items-center justify-center bg-gray-50 p-4">
+                        <Image
+                          src={result.image_url}
+                          alt={result.name}
+                          width={250}
+                          height={250}
+                          className="object-contain max-h-full max-w-full"
+                          unoptimized
+                        />
+                      </div>
+                      <div className="p-4 space-y-2">
+                        <h3 className="font-semibold text-gray-800 text-sm truncate">
+                          {result.name}
+                        </h3>
+                        <p className="text-gray-600 text-xs line-clamp-2">
+                          {result.description}
+                        </p>
+                        <div className="flex justify-between items-center pt-2">
+                          <span className="text-green-600 font-bold text-sm">
+                            FCFA {formatPrice(result.price)}
+                          </span>
+                          <ArrowRightIcon className="h-5 w-5 text-gray-400" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  </Link>
+                ))}
+              </motion.div>
+              <a
+                href={`/search?term=${encodeURIComponent(searchResults.query)}`}
+                className="text-blue-500 text-sm mt-4 block text-center"
+              >
+                See More
+              </a>
+            </>
+          ) : searchResults?.isLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <span className="text-gray-500 text-sm">Loading...</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-4">
+              <ExclamationCircleIcon className="h-6 w-6 text-gray-400 mr-2" />
+              <span className="text-gray-500 text-sm">No results found</span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Render standard message content (text, images, files)
     return (
       <div className="space-y-2">
         {/* Text content */}
-        {msg.content && <p className="text-gray-800 text-sm">{msg.content}</p>}
+        {typeof msg.content === "string" && !msg.is_json && (
+          <p className="text-gray-800 text-sm">{msg.content}</p>
+        )}
 
         {/* Image preview */}
         {msg.images && msg.images.length > 0 && (
@@ -465,7 +579,7 @@ const ChatInterface: React.FC = () => {
           </div>
         )}
 
-        {/*  File attachments */}
+        {/* File attachments */}
         {msg.files && msg.files.length > 0 && (
           <div className="space-y-1">
             {msg.files.map((file, index) => (
@@ -489,6 +603,7 @@ const ChatInterface: React.FC = () => {
   const handleClearChat = () => {
     clearMessages();
     clearConversationMessages();
+    setFirstMessage(null);
   };
 
   // Syncing not yet done
@@ -543,42 +658,42 @@ const ChatInterface: React.FC = () => {
     }
   }, [conversationMessages]);
 
-  // const containerVariants = {
-  //   hidden: { opacity: 0 },
-  //   visible: {
-  //     opacity: 1,
-  //     transition: {
-  //       delayChildren: 0.2,
-  //       staggerChildren: 0.1,
-  //     },
-  //   },
-  // };
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        delayChildren: 0.2,
+        staggerChildren: 0.1,
+      },
+    },
+  };
 
-  // const itemVariants = {
-  //   hidden: { y: 20, opacity: 0 },
-  //   visible: {
-  //     y: 0,
-  //     opacity: 1,
-  //     transition: {
-  //       type: "spring",
-  //       stiffness: 300,
-  //       damping: 15,
-  //     },
-  //   },
-  // };
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 15,
+      },
+    },
+  };
 
-  // const formatPrice = (price: number) => {
-  //   // Convert to string and split decimal if exists
-  //   const [integerPart, decimalPart] = price.toString().split('.');
+  const formatPrice = (price: number) => {
+    // Convert to string and split decimal if exists
+    const [integerPart, decimalPart] = price.toString().split(".");
 
-  //   // Add spaces for thousands
-  //   const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    // Add spaces for thousands
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
-  //   // Combine back with decimal if it exists
-  //   return decimalPart
-  //     ? `${formattedInteger}.${decimalPart}`
-  //     : formattedInteger;
-  // };
+    // Combine back with decimal if it exists
+    return decimalPart
+      ? `${formattedInteger}.${decimalPart}`
+      : formattedInteger;
+  };
 
   return (
     <motion.div
@@ -598,7 +713,7 @@ const ChatInterface: React.FC = () => {
       <div className="w-full max-w-5xl mx-auto flex-grow flex flex-col mt-8">
         {/* Container with centered content */}
 
-        <div className="flex-grow overflow-y-auto  bg-white rounded-lg p-6 flex flex-col">
+        <div className="flex-grow overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100  bg-white rounded-lg p-6 flex flex-col">
           {/* Title */}
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
@@ -612,7 +727,7 @@ const ChatInterface: React.FC = () => {
           {/* Chat Messages Container */}
           <div
             ref={messageContainerRef}
-            className="flex-grow overflow-y-auto mb-6 space-y-4 p-4 bg-white rounded-lg scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pb-16" // Add padding-bottom
+            className="flex-col overflow-y-scroll mb-6 space-y-4 p-4 h-[28rem] bg-white rounded-lg scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pb-16" // Add padding-bottom
           >
             {/* Default AI Initial Message */}
             <motion.div
@@ -852,6 +967,72 @@ const ChatInterface: React.FC = () => {
               </motion.div>
             )}
 
+            {/* Searching Indicator */}
+            {isSearching && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="flex items-start space-x-3"
+              >
+                <Image
+                  width={60}
+                  height={60}
+                  alt="Maguida Chat Icon"
+                  src="assets/chat_icon.svg"
+                  className="rounded-full"
+                />
+                <div className="bg-white px-4 py-2 rounded-lg shadow-md flex-grow">
+                  <div className="flex items-center mb-2">
+                    <span className="font-semibold text-gray-800">Maguida</span>
+                  </div>
+                  <div className="text-gray-600 text-sm text-justify max-w-4xl">
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{
+                        duration: 1.2,
+                        repeat: Infinity,
+                        repeatType: "mirror",
+                      }}
+                      className="flex items-center space-x-2"
+                    >
+                      <span>Searching for the best results...</span>
+                      <motion.div
+                        className="w-2 h-2 bg-gray-500 rounded-full"
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{
+                          duration: 0.8,
+                          repeat: Infinity,
+                          repeatType: "mirror",
+                        }}
+                      />
+                      <motion.div
+                        className="w-2 h-2 bg-gray-500 rounded-full"
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{
+                          duration: 0.8,
+                          repeat: Infinity,
+                          repeatType: "mirror",
+                          delay: 0.2,
+                        }}
+                      />
+                      <motion.div
+                        className="w-2 h-2 bg-gray-500 rounded-full"
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{
+                          duration: 0.8,
+                          repeat: Infinity,
+                          repeatType: "mirror",
+                          delay: 0.4,
+                        }}
+                      />
+                    </motion.div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* Error Message */}
             {error && (
               <div className="text-red-500 text-sm text-center">{error}</div>
@@ -976,9 +1157,9 @@ const ChatInterface: React.FC = () => {
                 {/* Send button */}
                 <button
                   onClick={handleSendMessage}
-                  className="bg-gray-600 text-white p-3 rounded-lg hover:bg-gray-700 transition flex-shrink-0 flex items-center"
+                  className="bg-black text-white p-3 rounded-lg hover:bg-gray-700 transition flex-shrink-0 flex items-center"
                 >
-                  <PaperAirplaneIcon className="h-5 w-5 mr-0 sm:mr-2" />
+                  <PaperAirplaneIcon className="h-5 w-5 mr-0 sm:mr-2 text-white fill-current" />
                   <span className="hidden md:inline">Send</span>
                 </button>
               </div>
@@ -991,7 +1172,11 @@ const ChatInterface: React.FC = () => {
                 href="/conditions"
                 className="text-gray-900 hover:underline"
               >
-                Terms and Conditions
+                Terms and Conditions&nbsp;
+              </Link>
+              and also adhere to the&nbsp;
+              <Link href="/terms" className="text-gray-900 hover:underline">
+                Privacy Policy
               </Link>
             </div>
           </div>
