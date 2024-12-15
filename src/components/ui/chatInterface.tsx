@@ -714,7 +714,7 @@ const ChatInterface: React.FC = () => {
         onAction={modalState.onAction}
       />
       {/* Container with centered content */}
-      <div className=" bg-white overflow-y-auto -mt-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100   rounded-lg p-6">
+      <div className="flex-auto bg-white overflow-y-auto -mt-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100   rounded-lg p-6">
         {/* Title */}
 
         <motion.h1
