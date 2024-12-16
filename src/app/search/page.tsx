@@ -12,7 +12,7 @@ const SearchResults = () => {
   const { searchResults, setSearchResults } = useChatStore();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
+  // const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
   // Change to an object to track expanded state for each product
   const [expandedItems, setExpandedItems] = useState<{
@@ -53,25 +53,25 @@ const SearchResults = () => {
       router.push(`/search?term=${encodeURIComponent(trimmedTerm)}`);
 
       // Fetch search results
-      const response = await fetch(
-        `${apiEndpoint}/shop/search/?query=${encodeURIComponent(trimmedTerm)}`
-      );
+      // const response = await fetch(
+      //   `${apiEndpoint}/shop/search/?query=${encodeURIComponent(trimmedTerm)}`
+      // );
 
       // Handle non-OK responses
-      if (!response.ok) {
-        throw new Error(
-          `Search request failed with status: ${response.status}`
-        );
-      }
+      // if (!response.ok) {
+      //   throw new Error(
+      //     `Search request failed with status: ${response.status}`
+      //   );
+      // }
 
-      const data = await response.json();
+      // const data = await response.json();
 
-      // Update results
-      setSearchResults({
-        query: trimmedTerm,
-        results: Array.isArray(data) ? data : [],
-        isLoading: false,
-      });
+      // // Update results
+      // setSearchResults({
+      //   query: trimmedTerm,
+      //   results: Array.isArray(data) ? data : [],
+      //   isLoading: false,
+      // });
     } catch (error) {
       console.error("Search error:", error);
 

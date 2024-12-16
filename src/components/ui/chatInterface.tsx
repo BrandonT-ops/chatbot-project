@@ -77,7 +77,7 @@ const ChatInterface: React.FC = () => {
     // clearConversationMessages,
     // fetchConversations,
     setSearchResults,
-    firstMessage,
+    // firstMessage,
     isStartState,
     setConversation,
     // searchResults,
@@ -231,47 +231,52 @@ const ChatInterface: React.FC = () => {
       };
 
       setError(null);
-      
+
       // Conversation Creation code
       if (userToken?.key) {
-
-        console.log(isStartState);
-        if (isStartState){
+        // console.log(isStartState);
+        if (isStartState) {
           setConversation(null);
           setConversationMessages(null);
         }
 
-        console.log(conversationMessages);
+        // console.log(conversationMessages);
 
-        if ((conversation === null || conversationMessages === null) && isStartState) {
-          console.log("Creating conversation...");
+        if (
+          (conversation === null || conversationMessages === null) &&
+          isStartState
+        ) {
+          // console.log("Creating conversation...");
           setConversation(null);
           setConversationMessages(null);
-          const newConversation = await createConversation(input, userToken.key);
+          const newConversation = await createConversation(
+            input,
+            userToken.key
+          );
 
           if (newConversation) {
             setConversation(newConversation.id); // Assuming `id` is the string you want to set
             setIsStartState(false);
           } else {
             console.error("Failed to create a new conversation.");
-          } 
-          
+          }
+
           if (!newConversation) {
             console.error("Failed to create a new conversation.");
             return; // Abort if conversation creation fails
           }
-      
-          // await addMessageToConversation(
-          //   newConversation.id,
-          //   input,
-          //   true,
-          //   userToken.key
-          // );
-          console.log("A new one was made here");
-          console.log(conversation);
+
+          await addMessageToConversation(
+            newConversation.id,
+            input,
+            true,
+            userToken.key
+          );
+          // console.log("A new one was made here");
+          // console.log(conversation);
         } else if (conversation) {
-          console.log("here is the culprit");
-          console.log(conversation);
+          // console.log("here is the culprit");
+          // console.log(conversation);
           await addMessageToConversation(
             conversation.id,
             input,
@@ -279,9 +284,7 @@ const ChatInterface: React.FC = () => {
             userToken.key
           );
         }
-
       }
-      
 
       // Check if the user is logged in when sending attachments
       if (pendingFiles.length > 0 && !isLoggedIn) {
@@ -317,7 +320,7 @@ const ChatInterface: React.FC = () => {
           } else {
             setIsSearching(true);
           }
-          console.log("Decision API Response:", decideData);
+          // console.log("Decision API Response:", decideData);
 
           if (!needs_assistance) {
             const trimmedTerm = input.trim();
@@ -388,10 +391,15 @@ const ChatInterface: React.FC = () => {
         let recentMessages: ConversationMessage[] = [];
 
         if (conversation!.id && userToken!.key) {
-          await fetchConversationMessages(conversation!.id, userToken!.key);
+          const fetchedMessages = await fetchConversationMessages(
+            conversation!.id,
+            userToken!.key
+          ); // Get the messages
 
-          const allMessages = conversationMessages || [];
-          recentMessages = allMessages.slice(-10);
+          if (fetchedMessages) {
+            const allMessages = fetchedMessages; // Use the fetched messages directly
+            recentMessages = allMessages.slice(-10); // Get the last 10 messages
+          }
         }
 
         if (userToken?.key) {
@@ -401,6 +409,7 @@ const ChatInterface: React.FC = () => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
+              // messages: [userMessage],
               messages: [...recentMessages, userMessage],
               metadata: {
                 fileCount: pendingFiles.length,
@@ -416,16 +425,14 @@ const ChatInterface: React.FC = () => {
           }
 
           const data: APIResponse = await response.json();
-          console.log("AI Response:", data);
+          // console.log("AI Response:", data);
 
           if (data.error) {
             throw new Error(data.error);
           }
-          
-         
 
           if (data.message?.send_request) {
-            console.log("Triggering search for:", data.message.query);
+            // console.log("Triggering search for:", data.message.query);
             setIsSearching(true);
 
             try {
@@ -451,7 +458,7 @@ const ChatInterface: React.FC = () => {
                 };
 
                 setSearchResults(chatSearch);
-                console.log("Top 3 search results:", searchData.slice(0, 3));
+                // console.log("Top 3 search results:", searchData.slice(0, 3));
 
                 if (userToken!.key) {
                   await addMessageToConversation(
@@ -517,7 +524,6 @@ const ChatInterface: React.FC = () => {
     userToken,
     isStartState,
     setIsStartState,
-    firstMessage,
     apiEndpoint,
   ]);
 
@@ -856,95 +862,6 @@ const ChatInterface: React.FC = () => {
             </div>
           )}
 
-          {/* Render search results if available */}
-          {/* {searchResults &&
-              searchResults.results &&
-              searchResults.results.length > 0 ? (
-                <div className="bg-white px-4 py-6 rounded-lg shadow-md flex-grow mt-4">
-                  {searchResults &&
-                  searchResults.results &&
-                  searchResults.results.length > 0 ? (
-                    <>
-                      <div className="flex items-center mb-4">
-                        <span className="font-semibold text-gray-800 text-lg">
-                          Search Results
-                        </span>
-                      </div>
-                      <motion.div
-                        variants={containerVariants}
-                        initial="hidden"
-                        animate="visible"
-                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
-                      >
-                        {searchResults.results
-                          .slice(0, 3)
-                          .map((result, index) => (
-                            <Link
-                              key={index}
-                              href={`/product?url=${encodeURIComponent(
-                                result.url
-                              )}`}
-                            >
-                              <motion.div
-                                variants={itemVariants}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:shadow-lg transition-transform cursor-pointer"
-                              >
-                                <div className="h-48 w-full flex items-center justify-center bg-gray-50 p-4">
-                                  <Image
-                                    src={result.image_url}
-                                    alt={result.name}
-                                    width={250}
-                                    height={250}
-                                    className="object-contain max-h-full max-w-full"
-                                    unoptimized
-                                  />
-                                </div>
-                                <div className="p-4 space-y-2">
-                                  <h3 className="font-semibold text-gray-800 text-sm truncate">
-                                    {result.name}
-                                  </h3>
-                                  <p className="text-gray-600 text-xs line-clamp-2">
-                                    {result.description}
-                                  </p>
-                                  <div className="flex justify-between items-center pt-2">
-                                    <span className="text-green-600 font-bold text-sm">
-                                      FCFA {formatPrice(result.price)}
-                                    </span>
-                                    <ArrowRightIcon className="h-5 w-5 text-gray-400" />
-                                  </div>
-                                </div>
-                              </motion.div>
-                            </Link>
-                          ))}
-                      </motion.div>
-                      <a
-                        href={`/search?term=${encodeURIComponent(
-                          searchResults.query
-                        )}`}
-                        className="text-blue-500 text-sm mt-4 block text-center"
-                      >
-                        See More
-                      </a>
-                    </>
-                  ) : searchResults?.isLoading ? (
-                    <div className="flex items-center justify-center py-4">
-                      <span className="text-gray-500 text-sm">Loading...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center py-4">
-                      <ExclamationCircleIcon className="h-6 w-6 text-gray-400 mr-2" />
-                      <span className="text-gray-500 text-sm">
-                        No results found
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div></div>
-              )} */}
-
           {/* Typing Indicator */}
           {isTyping && (
             <motion.div
@@ -1153,11 +1070,20 @@ const ChatInterface: React.FC = () => {
           {/* Button container */}
           <div className="flex flex-row justify-end md:flex-row gap-2 items-center md:w-auto w-fit">
             {/* File upload button */}
-            <button
+            {/* <button
               onClick={triggerFileInput}
-              className="bg-gray-200 p-3 rounded-lg hover:bg-gray-300 transition flex-shrink-0"
+              className="bg-gray-200 p-3  rounded-lg hover:bg-gray-300 transition flex-shrink-0"
             >
               <PaperClipIcon className="h-5 w-5 text-gray-700" />
+            </button> */}
+            <button
+              onClick={triggerFileInput}
+              disabled={true}
+              className="p-3 rounded-lg transition flex-shrink-0 
+             bg-gray-200 hover:bg-gray-300 text-gray-700 
+             disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+            >
+              <PaperClipIcon className="h-5 w-5" />
             </button>
 
             {/* Clear Chat button */}

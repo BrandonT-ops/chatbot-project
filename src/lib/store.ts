@@ -129,7 +129,7 @@ interface ChatStore {
   fetchConversationMessages: (
     conversationId: string,
     token: string
-  ) => Promise<void>;
+  ) => Promise<ConversationMessage[] | void>;
   createConversation: (
     message: string,
     token: string
@@ -263,8 +263,8 @@ export const useChatStore = create<ChatStore>()(
             }
           );
           const data: ConversationMessage[] = await response.json();
-          set({ conversationMessages: data });
-          // console.log(data);
+          // set({ conversationMessages: data });
+          return data;
         } catch (error) {
           console.error("Error fetching conversation messages:", error);
         }

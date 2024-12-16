@@ -206,7 +206,19 @@ const Header = () => {
 
     if (userToken) {
       try {
-        fetchConversationMessages(conversationId, userToken.key);
+        const fetchData = async () => {
+          try {
+            const data = await fetchConversationMessages(conversationId, userToken.key);
+            if (data) {
+              setConversationMessages(data);
+            }
+          } catch (error) {
+            console.error("Failed to fetch conversation messages:", error);
+          }
+        };
+        
+        fetchData();        
+        
       } catch (error) {
         console.error("Error fetching conversation messages:", error);
       }
@@ -400,6 +412,7 @@ const Header = () => {
                     if (e.key === "Enter") {
                       handleSearch(e);
                       close();
+                      router.push("/");
                     }
                   }}
                   className="w-full placeholder:text-sm bg-[#F0F2F5] text-gray-900 pl-10 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
@@ -438,6 +451,7 @@ const Header = () => {
                   onClick={() => {
                     addNewConversation(); // Call your existing method
                     close(); // Close the menu panel
+                    router.push("/");
                   }}
                   className="flex items-center w-full p-3 bg-gray-100 hover:bg-gray-200 text-gray-900"
                 >

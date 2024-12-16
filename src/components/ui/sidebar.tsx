@@ -45,13 +45,20 @@ const SideBar = () => {
 
   const handleLogout = () => {
     // Clear the authentication data in the store
+    clearUserData();
     clearUserToken();
     clearMessages();
     clearSearch();
-    clearUserData();
     setIsLoggedIn(false);
+    clearConversationMessages();
     setFirstMessage(null);
     setHasSyncedMessages(false);
+    setIsStartState(true);
+    clearConversationMessages();
+    setConversation(null);
+    setFirstMessage(null);
+    setSearchResults(null);
+    setConversationMessages(null);
     router.push("/");
   };
 
@@ -88,7 +95,18 @@ const SideBar = () => {
   
     if (userToken) {
       try {
-        fetchConversationMessages(conversationId, userToken.key);
+        const fetchData = async () => {
+          try {
+            const data = await fetchConversationMessages(conversationId, userToken.key);
+            if (data) {
+              setConversationMessages(data);
+            }
+          } catch (error) {
+            console.error("Failed to fetch conversation messages:", error);
+          }
+        };
+        
+        fetchData();   
       } catch (error) {
         console.error('Error fetching conversation messages:', error);
       }
