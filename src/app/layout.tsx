@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   icons: '/public/assets/app_logo.svg', 
   applicationName: 'Maguida Product Assistant',
   authors: {url:"Richenel's AI Agency"},
-  keywords: ["Product", "AI", ""],
-  
+  keywords: ["Product", "AI", "Product Search", ""],
+
 }
 
 export default function RootLayout({
