@@ -264,7 +264,7 @@ export const useChatStore = create<ChatStore>()(
           );
           const data: ConversationMessage[] = await response.json();
           set({ conversationMessages: data });
-          console.log(data);
+          // console.log(data);
         } catch (error) {
           console.error("Error fetching conversation messages:", error);
         }
@@ -289,7 +289,7 @@ export const useChatStore = create<ChatStore>()(
           }
 
           const data: Conversation = await response.json();
-          console.log(data);
+          // console.log(data);
 
           set((state) => ({
             firstMessage: message,
@@ -315,7 +315,7 @@ export const useChatStore = create<ChatStore>()(
         set((state) => ({
           conversationMessages: [
             ...(state.conversationMessages || []),
-            { content: message, is_user: is_user },
+            { content: message, is_user: is_user, is_json: is_json || false },
           ],
         }));
       
@@ -334,19 +334,7 @@ export const useChatStore = create<ChatStore>()(
             }
           );
       
-          // Parse the response
-          // const data: ConversationMessage = await response.json();
-      
-          // // // Update the state with the server-confirmed message (if necessary)
-          // // set((state) => ({
-          // //   conversationMessages: [
-          // //     ...(state.conversationMessages || []),
-          // //     {
-          // //       content: data.content, // Use server-provided content
-          // //       is_user: data.is_user,
-          // //     },
-          // //   ],
-          // // }));
+  
         } catch (error) {
           console.error("Error adding message to conversation:", error);
       

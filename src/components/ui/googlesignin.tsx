@@ -6,7 +6,16 @@ import { useRouter } from "next/navigation";
 const GoogleSignIn: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [isTermsChecked, setIsTermsChecked] = useState(false);
-  const { setUserToken, setUserData, setIsLoggedIn, setFirstMessage, setConversation, setConversationMessages, setSearchResults} = useChatStore();
+  const {
+    setUserToken,
+    setUserData,
+    setIsLoggedIn,
+    setFirstMessage,
+    setIsStartState,
+    setConversation,
+    setConversationMessages,
+    setSearchResults,
+  } = useChatStore();
   const router = useRouter();
   const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
@@ -46,7 +55,7 @@ const GoogleSignIn: React.FC = () => {
     response: google.accounts.id.CredentialResponse
   ) => {
     // console.log("Encoded JWT ID token: ", response.credential);
-    
+
     // Send the token to the backend
     fetch(`${apiEndpoint}/auth/google/login/`, {
       method: "POST",
@@ -61,15 +70,16 @@ const GoogleSignIn: React.FC = () => {
         //storing it in the Zustand store
         setUserToken({
           key: data.key,
-          google_token: response.credential, 
+          google_token: response.credential,
         });
-       
-        setIsLoggedIn(true);
-        setFirstMessage(null);
-        setConversation(null);
-        setConversationMessages(null);
-        setSearchResults(null);
-        
+
+         setIsLoggedIn(true);
+         setFirstMessage(null);
+        //  setConversation(null);
+        //  setConversationMessages(null);
+        // setSearchResults(null);
+         setIsStartState(true);
+
         // page refresh
         router.refresh();
       })
@@ -77,33 +87,40 @@ const GoogleSignIn: React.FC = () => {
         console.error("Error during authentication:", error);
       });
 
-
-      fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${response.credential}`, {
+    fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${response.credential}`,
+      {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          // console.log("User Data acquired:", data);
-          //storing it in the Zustand store
-          setUserData({
-            userId: data.sub, // Assuming `sub` is the unique user ID provided by Google
-            firstname: data.given_name,
-            lastname: data.family_name,
-            email: data.email,
-            profilePicture: data.picture, 
-          });
-          
-          // page refresh
-          router.refresh();
-          router.push("/");
-        })
-        .catch((error) => {
-          console.error("Error during authentication:", error);
+      }
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        //storing it in the Zustand store
+        setUserData({
+          userId: data.sub, // Assuming `sub` is the unique user ID provided by Google
+          firstname: data.given_name,
+          lastname: data.family_name,
+          email: data.email,
+          profilePicture: data.picture,
         });
 
+        setIsLoggedIn(true);
+        setFirstMessage(null);
+        setConversation(null);
+        setConversationMessages(null);
+        setSearchResults(null);
+        setIsStartState(true);
+
+        // page refresh
+        router.refresh();
+        router.push("/");
+      })
+      .catch((error) => {
+        console.error("Error during authentication:", error);
+      });
   };
 
   const handleAcceptAndContinue = () => {
@@ -112,9 +129,9 @@ const GoogleSignIn: React.FC = () => {
 
       // Programmatically click the Google Sign-In button
       const googleButton = document.getElementById("google-signin-button");
-     
+
       if (googleButton) {
-        console.log("Button clicked");
+        // console.log("Button clicked");
         googleButton.click();
         setShowModal(false);
       }
@@ -127,7 +144,7 @@ const GoogleSignIn: React.FC = () => {
       onClick={() => setShowModal(true)}
       */}
 
-      <div >
+      <div>
         <div id="google-signin-button" style={{ display: "block" }}></div>
       </div>
 

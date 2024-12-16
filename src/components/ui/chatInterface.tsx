@@ -69,15 +69,17 @@ const ChatInterface: React.FC = () => {
     userData,
     // setHasSyncedMessages,
     // hasSyncedMessages,
+    setConversationMessages,
     fetchConversationMessages,
     userToken,
     setIsStartState,
-    setFirstMessage,
+    // setFirstMessage,
     // clearConversationMessages,
     // fetchConversations,
     setSearchResults,
     firstMessage,
     isStartState,
+    setConversation,
     // searchResults,
     // clearMessages,
     isLoggedIn,
@@ -139,43 +141,6 @@ const ChatInterface: React.FC = () => {
     router.push("login");
   };
 
-  // const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const files = e.target.files ? Array.from(e.target.files) : [];
-
-  //   // Validate file types and sizes
-  //   const validFiles = files.filter((file) => {
-  //     const allowedTypes = [
-  //       "image/jpeg",
-  //       "image/png",
-  //       "image/svg+xml",
-  //       "application/pdf",
-  //       "text/plain",
-  //       "application/msword",
-  //       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  //     ];
-  //     const maxSize = 5 * 1024 * 1024; // 5MB
-
-  //     if (!allowedTypes.includes(file.type)) {
-  //       setError(`Unsupported file type: ${file.name}`);
-  //       return false;
-  //     }
-
-  //     if (file.size > maxSize) {
-  //       setError(`File too large: ${file.name} (max 5MB)`);
-  //       return false;
-  //     }
-
-  //     return true;
-  //   });
-
-  //   setPendingFiles((prev) => {
-  //     const newFiles = validFiles.filter(
-  //       (file) => !prev.some((prevFile) => prevFile.name === file.name && prevFile.size === file.size)
-  //     );
-  //     return [...prev, ...newFiles];
-  //   });
-  // };
-
   const handleSendMessage = useCallback(async () => {
     if (!input.trim() && pendingFiles.length === 0) return; // Prevent sending empty messages and no files
 
@@ -191,12 +156,14 @@ const ChatInterface: React.FC = () => {
       return;
     }
 
-    if (isStartState && isLoggedIn && !firstMessage) {
-      setFirstMessage(input);
-      setIsStartState(false);
+    // Initial State Setter
+    if (isStartState && isLoggedIn && !conversation) {
+      // setFirstMessage(input);
+      setIsStartState(true);
     }
 
     setInput("");
+    setIsTyping(true);
 
     // Create a FormData object to send the files
     const formData = new FormData();
@@ -207,94 +174,126 @@ const ChatInterface: React.FC = () => {
     // Upload the files to the server and get the URLs
 
     try {
-      if(pendingFiles.length > 0){
-      const uploadResponse = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-    
+      if (pendingFiles.length > 0) {
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
 
-      if (!uploadResponse.ok) {
-        throw new Error(`Upload failed with status: ${uploadResponse.status}`);
-      }
+        if (!uploadResponse.ok) {
+          throw new Error(
+            `Upload failed with status: ${uploadResponse.status}`
+          );
+        }
 
-      const uploadData = await uploadResponse.json();
+        const uploadData = await uploadResponse.json();
 
-      // Update images and files with the URLs from the server response
-      if (uploadData.files) {
-        uploadData.files.forEach((uploadedFile: UploadedFile) => {
-          if (uploadedFile.url) {
-            if (images.includes(uploadedFile.name)) {
-              // Update image URLs
-              userMessage.images!.push(uploadedFile.url);
-            } else {
-              // Update non-image file URLs
-              const file = userMessage.files!.find(
-                (f) => f.name === uploadedFile.name
-              );
-              if (file) {
-                file.url = uploadedFile.url;
+        // Update images and files with the URLs from the server response
+        if (uploadData.files) {
+          uploadData.files.forEach((uploadedFile: UploadedFile) => {
+            if (uploadedFile.url) {
+              if (images.includes(uploadedFile.name)) {
+                // Update image URLs
+                userMessage.images!.push(uploadedFile.url);
+              } else {
+                // Update non-image file URLs
+                const file = userMessage.files!.find(
+                  (f) => f.name === uploadedFile.name
+                );
+                if (file) {
+                  file.url = uploadedFile.url;
+                }
               }
             }
-          }
-        });
+          });
+        }
       }
 
-    }
-      
       const images = pendingFiles
-      .filter((file) => file.type.startsWith("image/"))
-      .map((imageFile) => imageFile.name); // We will update this with the URLs after upload
+        .filter((file) => file.type.startsWith("image/"))
+        .map((imageFile) => imageFile.name); // We will update this with the URLs after upload
 
-    const files = pendingFiles
-      .filter((file) => !file.type.startsWith("image/"))
-      .map((file) => ({
-        name: file.name,
-        url: "", // This will be updated with the URL from the server
-      }));
+      const files = pendingFiles
+        .filter((file) => !file.type.startsWith("image/"))
+        .map((file) => ({
+          name: file.name,
+          url: "", // This will be updated with the URL from the server
+        }));
 
-    const isJson = images.length > 0 || files.length > 0;
+      const isJson = images.length > 0 || files.length > 0;
 
-    const userMessage: ConversationMessage = {
-      is_user: true,
-      content: input,
-      images, // Initially empty, will update after upload
-      files, // Initially empty, will update after upload
-      is_json: isJson, // Set is_json based on the presence of files or images
-    };
+      const userMessage: ConversationMessage = {
+        is_user: true,
+        content: input,
+        images, // Initially empty, will update after upload
+        files, // Initially empty, will update after upload
+        is_json: isJson, // Set is_json based on the presence of files or images
+      };
 
-    setError(null);
+      setError(null);
+      
+      // Conversation Creation code
+      if (userToken?.key) {
 
+        console.log(isStartState);
+        if (isStartState){
+          setConversation(null);
+          setConversationMessages(null);
+        }
 
-    if (userToken?.key) {
-      if (firstMessage) {
-        console.log("Creating conversation...");
-        await createConversation(firstMessage, userToken.key);
+        console.log(conversationMessages);
+
+        if ((conversation === null || conversationMessages === null) && isStartState) {
+          console.log("Creating conversation...");
+          setConversation(null);
+          setConversationMessages(null);
+          const newConversation = await createConversation(input, userToken.key);
+
+          if (newConversation) {
+            setConversation(newConversation.id); // Assuming `id` is the string you want to set
+            setIsStartState(false);
+          } else {
+            console.error("Failed to create a new conversation.");
+          } 
+          
+          if (!newConversation) {
+            console.error("Failed to create a new conversation.");
+            return; // Abort if conversation creation fails
+          }
+      
+          // await addMessageToConversation(
+          //   newConversation.id,
+          //   input,
+          //   true,
+          //   userToken.key
+          // );
+          console.log("A new one was made here");
+          console.log(conversation);
+        } else if (conversation) {
+          console.log("here is the culprit");
+          console.log(conversation);
+          await addMessageToConversation(
+            conversation.id,
+            input,
+            true,
+            userToken.key
+          );
+        }
+
       }
-      await addMessageToConversation(
-        conversation!.id,
-        userMessage.content,
-        true,
-        userToken.key
-      );
-    }
+      
 
-    // Check if the user is logged in when sending attachments
-    if (pendingFiles.length > 0 && !isLoggedIn) {
-      setModalState({
-        isOpen: true,
-        title: "Login Required",
-        message: "Please log in to send messages with attachments.",
-        actionText: "Log in",
-        onAction: redirectToLogin,
-      });
-      return;
-    }
-
-      // console.log("Uploaded files:", uploadData.files);
-
-      // Now proceed with the rest of your logic (e.g., product search or assistance)
-      // Send the user message with updated images/URLs
+      // Check if the user is logged in when sending attachments
+      if (pendingFiles.length > 0 && !isLoggedIn) {
+        setModalState({
+          isOpen: true,
+          title: "Login Required",
+          message: "Please log in to send messages with attachments.",
+          actionText: "Log in",
+          onAction: redirectToLogin,
+        });
+        return;
+      }
 
       if (!isLoggedIn) {
         try {
@@ -422,36 +421,39 @@ const ChatInterface: React.FC = () => {
           if (data.error) {
             throw new Error(data.error);
           }
+          
+         
 
           if (data.message?.send_request) {
             console.log("Triggering search for:", data.message.query);
-  
+            setIsSearching(true);
+
             try {
               const searchResponse = await fetch(
                 `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
                   data.message.query
                 )}`
               );
-  
+
               if (!searchResponse.ok) {
                 throw new Error(
                   `Search API failed with status: ${searchResponse.status}`
                 );
               }
-  
+
               if (searchResponse.ok) {
                 const searchData = await searchResponse.json();
-  
+
                 const chatSearch: SearchResultType = {
                   query: data.message.query,
                   results: searchData,
                   isLoading: false,
                 };
-  
+
                 setSearchResults(chatSearch);
                 console.log("Top 3 search results:", searchData.slice(0, 3));
-  
-                if (userToken?.key) {
+
+                if (userToken!.key) {
                   await addMessageToConversation(
                     conversation!.id,
                     chatSearch, // Pass search results
@@ -471,8 +473,8 @@ const ChatInterface: React.FC = () => {
               is_user: false,
               content: data.message!.user_answer,
             };
-  
-            if (userToken!.key ) {
+
+            if (userToken!.key) {
               await addMessageToConversation(
                 conversation!.id,
                 aiMessage.content,
@@ -480,7 +482,7 @@ const ChatInterface: React.FC = () => {
                 userToken.key,
                 false // is_json = false
               );
-            } 
+            }
           }
         }
 
@@ -510,12 +512,11 @@ const ChatInterface: React.FC = () => {
     setSearchResults,
     conversationMessages,
     addMessage,
-    
+    setConversation,
     createConversation,
     userToken,
     isStartState,
     setIsStartState,
-    setFirstMessage,
     firstMessage,
     apiEndpoint,
   ]);
@@ -1053,12 +1054,10 @@ const ChatInterface: React.FC = () => {
             <div className="text-red-500 text-sm text-center">{error}</div>
           )}
         </div>
-
-      
       </div>
       <div className="flex-none bottom-0 left-0 w-full bg-white shadow-lg p-4 border-t">
-          {/* File Preview */}
-          {pendingFiles.length > 0 && (
+        {/* File Preview */}
+        {pendingFiles.length > 0 && (
           <div className="mb-4 flex flex-row gap-2 overflow-x-auto py-2 px-1 pb-48 md:pb-32">
             {pendingFiles.map((file, index) => (
               <motion.div

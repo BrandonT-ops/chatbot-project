@@ -29,10 +29,12 @@ const SideBar = () => {
     setConversation,
     setFirstMessage,
     setHasSyncedMessages,
+    setConversationMessages,
   } = useChatStore();
   const {
     // addMessageToConversation,
     //createConversation,
+    setSearchResults,
     userToken,
     clearConversationMessages,
     setIsStartState,
@@ -96,9 +98,12 @@ const SideBar = () => {
   const addNewConversation = async () => {
     try {
       setIsStartState(true);
-      clearMessages();
       clearConversationMessages();
+      setConversation(null);
       setFirstMessage(null);
+      setSearchResults(null);
+      setConversationMessages(null);
+      
     } catch (error) {
       console.error("Error creating new conversation:", error);
     }

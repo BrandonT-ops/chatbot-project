@@ -42,6 +42,7 @@ const Header = () => {
   const [visibleConversations, setVisibleConversations] = useState(5);
   const {
     setFirstMessage,
+    setConversationMessages,
     setHasSyncedMessages,
     setSearchResults,
     clearConversationMessages,
@@ -189,6 +190,12 @@ const Header = () => {
     clearConversationMessages();
     setFirstMessage(null);
     setHasSyncedMessages(false);
+    setIsStartState(true);
+    clearConversationMessages();
+    setConversation(null);
+    setFirstMessage(null);
+    setSearchResults(null);
+    setConversationMessages(null);
     router.push("/");
   };
 
