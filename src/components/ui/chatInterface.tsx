@@ -61,6 +61,7 @@ const ChatInterface: React.FC = () => {
   const [, setFilePath] = useState<string | null>(null);
   const messageContainerRef = useRef<HTMLDivElement | null>(null);
   const { addMessage, conversationMessages } = useChatStore();
+  const [apiError, setApiError] = useState(false);
   const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
   const {
     addMessageToConversation,
@@ -163,6 +164,7 @@ const ChatInterface: React.FC = () => {
     }
 
     setInput("");
+    setApiError(false);
     setIsTyping(true);
 
     // Create a FormData object to send the files
@@ -181,6 +183,7 @@ const ChatInterface: React.FC = () => {
         });
 
         if (!uploadResponse.ok) {
+          setApiError(true);
           throw new Error(
             `Upload failed with status: ${uploadResponse.status}`
           );
@@ -225,9 +228,9 @@ const ChatInterface: React.FC = () => {
       const userMessage: ConversationMessage = {
         is_user: true,
         content: input,
-        images, // Initially empty, will update after upload
-        files, // Initially empty, will update after upload
-        is_json: isJson, // Set is_json based on the presence of files or images
+        images,
+        files,
+        is_json: isJson,
       };
 
       setError(null);
@@ -304,11 +307,13 @@ const ChatInterface: React.FC = () => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              
             },
             body: JSON.stringify({ messages: [userMessage] }),
           });
 
           if (!decideResponse.ok) {
+            setApiError(true);
             throw new Error(`HTTP error! Status: ${decideResponse.status}`);
           }
 
@@ -317,10 +322,7 @@ const ChatInterface: React.FC = () => {
 
           if (needs_assistance) {
             setIsTyping(true);
-          } else {
-            setIsSearching(true);
           }
-          // console.log("Decision API Response:", decideData);
 
           if (!needs_assistance) {
             const trimmedTerm = input.trim();
@@ -348,6 +350,7 @@ const ChatInterface: React.FC = () => {
               );
 
               if (!response.ok) {
+                setApiError(true);
                 throw new Error(
                   `Search request failed with status: ${response.status}`
                 );
@@ -383,6 +386,7 @@ const ChatInterface: React.FC = () => {
           }
         } catch (error) {
           console.error("Error with decision endpoint:", error);
+          setApiError(true);
           return;
         }
       }
@@ -397,6 +401,7 @@ const ChatInterface: React.FC = () => {
           ); // Get the messages
 
           if (fetchedMessages) {
+            setConversationMessages(fetchedMessages);
             const allMessages = fetchedMessages; // Use the fetched messages directly
             recentMessages = allMessages.slice(-10); // Get the last 10 messages
           }
@@ -421,6 +426,7 @@ const ChatInterface: React.FC = () => {
           });
 
           if (!response.ok) {
+            setError("API Error try again");
             throw new Error(`HTTP error! Status: ${response.status}`);
           }
 
@@ -433,16 +439,21 @@ const ChatInterface: React.FC = () => {
 
           if (data.message?.send_request) {
             // console.log("Triggering search for:", data.message.query);
+            setIsTyping(false);
             setIsSearching(true);
+            const token = userToken!.key;
 
             try {
               const searchResponse = await fetch(
                 `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
                   data.message.query
-                )}`
+                )}`,   {
+                  headers: { Authorization: `Token ${token}` },
+                }
               );
 
               if (!searchResponse.ok) {
+                setApiError(true);
                 throw new Error(
                   `Search API failed with status: ${searchResponse.status}`
                 );
@@ -458,7 +469,6 @@ const ChatInterface: React.FC = () => {
                 };
 
                 setSearchResults(chatSearch);
-                // console.log("Top 3 search results:", searchData.slice(0, 3));
 
                 if (userToken!.key) {
                   await addMessageToConversation(
@@ -474,6 +484,7 @@ const ChatInterface: React.FC = () => {
               }
             } catch (searchError) {
               console.error("Error during search:", searchError);
+              setApiError(true);
             }
           } else {
             const aiMessage: ConversationMessage = {
@@ -496,6 +507,7 @@ const ChatInterface: React.FC = () => {
         setIsTyping(false); // Stop typing indicator
         setIsSearching(false);
       } catch (error) {
+        setApiError(true);
         console.error("Error:", error);
         setIsTyping(false);
       } finally {
@@ -508,6 +520,7 @@ const ChatInterface: React.FC = () => {
       }
     } catch (error) {
       console.error("Error:", error);
+      setApiError(true);
       setIsTyping(false);
     }
   }, [
@@ -521,6 +534,7 @@ const ChatInterface: React.FC = () => {
     addMessage,
     setConversation,
     createConversation,
+    setConversationMessages,
     userToken,
     isStartState,
     setIsStartState,
@@ -734,7 +748,7 @@ const ChatInterface: React.FC = () => {
         onAction={modalState.onAction}
       />
       {/* Container with centered content */}
-      <div className="flex-auto bg-white overflow-y-auto -mt-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100  rounded-lg p-6">
+      <div  ref={messageContainerRef} className="flex-auto bg-white overflow-y-auto -mt-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100  rounded-lg p-6">
         {/* Title */}
 
         <motion.h1
@@ -748,7 +762,7 @@ const ChatInterface: React.FC = () => {
 
         {/* Chat Messages Container */}
         <div
-          ref={messageContainerRef}
+         
           className="mb-6  space-y-4 p-4 bg-white rounded-lg scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pb-16" // Add padding-bottom
         >
           {/* Default AI Initial Message */}
@@ -969,6 +983,11 @@ const ChatInterface: React.FC = () => {
           {/* Error Message */}
           {error && (
             <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
+          {apiError && (
+            <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
+              There was an error processing your request. Please try again.
+            </div>
           )}
         </div>
       </div>
