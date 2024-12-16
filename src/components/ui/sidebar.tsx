@@ -129,7 +129,7 @@ const SideBar = () => {
           relative h-screen 
           bg-white shadow-lg 
           transition-all duration-300 
-          
+          z-20
           ${
             isMobile
               ? isOpen

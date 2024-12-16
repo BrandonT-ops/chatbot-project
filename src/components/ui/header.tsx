@@ -24,9 +24,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { useChatStore } from "@/lib/store";
-import { useRouter, 
-   useSearchParams
- } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const navigation = [
   { name: "Dashboard", href: "#", current: true },
@@ -130,7 +128,7 @@ const Header = () => {
   useEffect(() => {
     const term = searchParams.get("term") || ""; // Get the `term` from URL
     const trimmedTerm = term.trim();
-  
+
     if (!trimmedTerm) {
       // If the term is empty, reset the state and prevent the search
       setSearchTerm(""); // Clear the input field
@@ -141,7 +139,7 @@ const Header = () => {
       });
       return; // Exit early
     }
-  
+
     // Update the input field and set loading state
     setSearchTerm(trimmedTerm);
     setSearchResults({
@@ -149,19 +147,19 @@ const Header = () => {
       results: [],
       isLoading: true,
     });
-  
+
     const performSearch = async () => {
       try {
         const response = await fetch(
           `${apiEndpoint}/shop/search/?query=${encodeURIComponent(trimmedTerm)}`
         );
-  
+
         if (!response.ok) {
           throw new Error(
             `Search request failed with status: ${response.status}`
           );
         }
-  
+
         const data = await response.json();
         setSearchResults({
           query: trimmedTerm,
@@ -177,10 +175,10 @@ const Header = () => {
         });
       }
     };
-  
+
     performSearch();
   }, [searchParams, apiEndpoint, setSearchResults]);
-  
+
   const handleSignOut = () => {
     clearUserData();
     clearUserToken();
@@ -245,7 +243,7 @@ const Header = () => {
     <>
       <Disclosure
         as="nav"
-        className="bg-white border-b-2 border-gray-200 flex-none w-full top-0 fixed"
+        className="bg-white border-b-2 border-gray-200 flex-none w-full z-10 top-0 fixed"
       >
         <div className="mx-auto max-w-full px-2 sm:px-6 lg:px-24">
           <div className="relative flex h-16 items-center justify-between">
@@ -283,12 +281,10 @@ const Header = () => {
               )}
             </div>
 
-
             {/* Buttons and profile by the right */}
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
               {isLoggedIn ? (
                 <>
-
                   {/* Profile dropdown */}
                   <Menu as="div" className="relative ml-3">
                     <div className="flex items-center">
@@ -332,9 +328,9 @@ const Header = () => {
                 </>
               ) : (
                 <div className="flex justify-center items-center w-full px-1 sm:px-3 md:px-3">
-                <button
-                  onClick={handleRedirect}
-                  className="
+                  <button
+                    onClick={handleRedirect}
+                    className="
                     flex 
                     items-center 
                     justify-center 
@@ -358,9 +354,9 @@ const Header = () => {
                     focus:ring-gray-500
                     group
                   "
-                >
-                  <UserPlusIcon 
-                    className="
+                  >
+                    <UserPlusIcon
+                      className="
                       h-5
                       w-5 
                       sm:h-6
@@ -370,12 +366,12 @@ const Header = () => {
                       group-hover:scale-100
                       transition
                       duration-200
-                    " 
-                  />
-                  {/* <span className="sm:hidden block ml-2">Sign in</span> */}
-                  <span className="sm:block hidden">Sign in with Google</span>
-                </button>
-              </div>
+                    "
+                    />
+                    {/* <span className="sm:hidden block ml-2">Sign in</span> */}
+                    <span className="sm:block hidden">Sign in with Google</span>
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -383,7 +379,7 @@ const Header = () => {
 
         {/* Mobile Menu Panel */}
         <DisclosurePanel className="sm:hidden">
-          <div className="space-y-1 px-2 pb-3 pt-2">
+          <div className="space-y-1 px-2 pb-3 pt-2 ">
             {/* Search Bar for Mobile */}
             <div className="px-2 pb-3">
               <form onSubmit={handleSearch} className="relative">
@@ -403,6 +399,7 @@ const Header = () => {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       handleSearch(e);
+                      close();
                     }
                   }}
                   className="w-full placeholder:text-sm bg-[#F0F2F5] text-gray-900 pl-10 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
@@ -429,30 +426,7 @@ const Header = () => {
                     {item.name}
                   </DisclosureButton>
                 ))}
-                <div className="px-2">
-                  {/* <div className="flex justify-center items-center">
-                    <button
-                      onClick={handleRedirect}
-                      className="flex items-center px-6 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 21v-2a4 4 0 00-3-3.87M12 3v4m-4-4v4m12 7l-4 4m0 0l-4-4m4 4V3"
-                        />
-                      </svg>
-                      Sign in with Google
-                    </button>
-                  </div> */}
-                </div>
+                <div className="px-2"></div>
               </>
             )}
 
@@ -460,13 +434,16 @@ const Header = () => {
             {isLoggedIn && (
               <div>
                 {/* Add Conversation Button */}
-                <button
-                  onClick={addNewConversation}
+                <Disclosure.Button
+                  onClick={() => {
+                    addNewConversation(); // Call your existing method
+                    close(); // Close the menu panel
+                  }}
                   className="flex items-center w-full p-3 bg-gray-100 hover:bg-gray-200 text-gray-900"
                 >
                   <PlusIcon className="h-5 w-5 mr-2" />
                   New Conversation
-                </button>
+                </Disclosure.Button>
 
                 {/* Conversation List */}
                 <div className="mt-2 px-2 text-xs font-bold text-gray-500 uppercase">
@@ -476,25 +453,26 @@ const Header = () => {
                   conversations
                     .slice(0, visibleConversations)
                     .map((conversation) => (
-                      <button
+                      <Disclosure.Button
                         key={conversation.id}
-                        onClick={() =>
-                          handleSelectConversation(conversation.id)
-                        }
+                        as="button"
+                        onClick={() => {
+                          handleSelectConversation(conversation.id); // Select the conversation
+                          close(); // Close the menu panel
+                        }}
                         className="w-full text-left p-3 hover:bg-gray-100 border-b text-gray-900 text-sm"
                       >
                         <div className="flex items-center space-x-2">
                           <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5 text-gray-600 flex-shrink-0" />
                           <span className="truncate">{conversation.title}</span>
                         </div>
-                      </button>
+                      </Disclosure.Button>
                     ))
                 ) : (
                   <div className="p-3 text-gray-500 text-xs text-center">
                     None yet, Start a new conversation!
                   </div>
                 )}
-
                 {/* See More */}
                 {conversations!.length > visibleConversations && (
                   <button
@@ -517,20 +495,20 @@ const Header = () => {
                 {/* Additional logged-in user actions */}
                 <div className="flex space-x-2 p-3">
                   {/* <button
-                    type="button"
-                    className="flex-1 rounded-md bg-[#F0F2F5] p-2 text-gray-900 hover:bg-gray-200 transition-colors"
-                  >
-                    <HeartIcon aria-hidden="true" className="size-5 mx-auto" />
-                  </button>
-                  <button
-                    type="button"
-                    className="flex-1 rounded-md bg-[#F0F2F5] p-2 text-gray-900 hover:bg-gray-200 transition-colors"
-                  >
-                    <ShoppingBagIcon
-                      aria-hidden="true"
-                      className="size-5 mx-auto"
-                    />
-                  </button> */}
+                      type="button"
+                      className="flex-1 rounded-md bg-[#F0F2F5] p-2 text-gray-900 hover:bg-gray-200 transition-colors"
+                    >
+                      <HeartIcon aria-hidden="true" className="size-5 mx-auto" />
+                    </button>
+                    <button
+                      type="button"
+                      className="flex-1 rounded-md bg-[#F0F2F5] p-2 text-gray-900 hover:bg-gray-200 transition-colors"
+                    >
+                      <ShoppingBagIcon
+                        aria-hidden="true"
+                        className="size-5 mx-auto"
+                      />
+                    </button> */}
                 </div>
               </div>
             )}
