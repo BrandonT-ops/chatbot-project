@@ -269,12 +269,12 @@ const ChatInterface: React.FC = () => {
             return; // Abort if conversation creation fails
           }
 
-          // await addMessageToConversation(
-          //   newConversation.id,
-          //   input,
-          //   true,
-          //   userToken.key
-          // );
+          await addMessageToConversation(
+            newConversation.id,
+            input,
+            true,
+            userToken.key
+          );
           // console.log("A new one was made here");
           // console.log(conversation);
         } else if (conversation) {
@@ -401,7 +401,7 @@ const ChatInterface: React.FC = () => {
           ); // Get the messages
 
           if (fetchedMessages) {
-            setConversationMessages(fetchedMessages);
+            // setConversationMessages(fetchedMessages);
             const allMessages = fetchedMessages; // Use the fetched messages directly
             recentMessages = allMessages.slice(-10); // Get the last 10 messages
           }
@@ -527,7 +527,7 @@ const ChatInterface: React.FC = () => {
     input,
     pendingFiles,
     addMessageToConversation,
-    // fetchConversationMessages,
+    fetchConversationMessages,
     conversation,
     setSearchResults,
     conversationMessages,
