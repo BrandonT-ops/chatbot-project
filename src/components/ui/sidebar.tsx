@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
-   // Cog6ToothIcon,
   ArrowLeftOnRectangleIcon,
   EllipsisHorizontalIcon,
   ChatBubbleOvalLeftEllipsisIcon,
@@ -19,6 +18,12 @@ const SideBar = () => {
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   const [visibleConversations, setVisibleConversations] = useState(5);
+  // const [isSeeMore, setIsSeeMore] = useState(true);
+  // const [isAtEnd, setIsAtEnd] = useState(false);
+
+  const [selectedConversation, setSelectedConversation] = useState<
+    string | null
+  >(null);
 
   const {
     clearUserToken,
@@ -32,8 +37,6 @@ const SideBar = () => {
     setConversationMessages,
   } = useChatStore();
   const {
-    // addMessageToConversation,
-    //createConversation,
     setSearchResults,
     userToken,
     clearConversationMessages,
@@ -90,14 +93,18 @@ const SideBar = () => {
   const handleSelectConversation = async (conversationId: string) => {
     clearMessages();
     clearConversationMessages();
+    setSelectedConversation(conversationId);
 
     setConversation(conversationId);
-  
+
     if (userToken) {
       try {
         const fetchData = async () => {
           try {
-            const data = await fetchConversationMessages(conversationId, userToken.key);
+            const data = await fetchConversationMessages(
+              conversationId,
+              userToken.key
+            );
             if (data) {
               setConversationMessages(data);
             }
@@ -105,10 +112,10 @@ const SideBar = () => {
             console.error("Failed to fetch conversation messages:", error);
           }
         };
-        
-        fetchData();   
+
+        fetchData();
       } catch (error) {
-        console.error('Error fetching conversation messages:', error);
+        console.error("Error fetching conversation messages:", error);
       }
     }
   };
@@ -128,17 +135,24 @@ const SideBar = () => {
       setSearchResults(null);
       setConversationMessages(null);
       router.push("/");
-      
     } catch (error) {
       console.error("Error creating new conversation:", error);
     }
   };
 
+  const totalConversations = conversations!.length;
 
   const handleSeeMore = () => {
-    setVisibleConversations((prev) => prev + 5);
+    setVisibleConversations((prev) => {
+      // If currently showing all or more than total, reset to initial state
+      if (prev >= totalConversations) {
+        return 5;
+      }
+      // Otherwise, increase by 5 but don't exceed total conversations
+      return Math.min(prev + 5, totalConversations);
+    });
   };
-
+  
   return (
     <>
       {/* Mobile overlay when sidebar is open */}
@@ -178,7 +192,9 @@ const SideBar = () => {
                 height={100}
                 className="object-cover w-8 h-auto rounded justify-center my-auto mr-3"
               />
-              <h2 className="text-md justify-center items-center flex font-bold text-gray-800">Maguida</h2>
+              <h2 className="text-md justify-center items-center flex font-bold text-gray-800">
+                Maguida
+              </h2>
             </div>
           )}
           <button
@@ -233,6 +249,9 @@ const SideBar = () => {
                 text-sm
                 pl-7
                 font-normal
+                ${
+                  selectedConversation === conversation.id ? "bg-[#FDF4FF]" : ""
+                }
                 ${!isOpen && "flex justify-center"}
               `}
               >
@@ -262,22 +281,26 @@ const SideBar = () => {
           )}
 
           {/* See More */}
-          {conversations!.length > visibleConversations && isOpen && (
+          {conversations!.length > 5 && (
             <button
               onClick={handleSeeMore}
               className="
-                w-full 
-                p-3 
-                text-center 
-                text-gray-900 
-                hover:bg-gray-100 
-                flex 
-                items-center 
-                justify-center
-              "
+              w-full
+              p-3
+              text-center
+              text-gray-900
+              hover:bg-gray-100
+              flex
+              items-center
+              justify-center
+            "
             >
               <EllipsisHorizontalIcon className="h-5 w-5 mr-2" />
-              <span className="text-sm font-medium truncate">See more</span>
+              <span className="text-sm font-medium truncate">
+                {visibleConversations >= totalConversations
+                  ? "See Less"
+                  : "See More"}
+              </span>
             </button>
           )}
         </div>
