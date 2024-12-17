@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     // Send a request to the OpenAI API
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Use GPT-4 for advanced capabilities
+      model: "gpt-4o-2024-11-20", // Use GPT-4 for advanced capabilities
       messages: formattedMessages,
       max_tokens: 300,
       temperature: 0.7,
