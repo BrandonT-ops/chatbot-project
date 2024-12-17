@@ -41,7 +41,7 @@ export interface Conversation {
 }
 
 export interface ConversationMessage {
-  content: string | SearchResultType ;
+  content: string | SearchResultType  | ChatCombinedResponse ;
   is_user: boolean;
   images?: string[]; // Array to store image URLs
   files?: { name: string; url: string }[]; // Array to store file metadata
@@ -82,6 +82,11 @@ export interface SearchResultType {
   query: string;
   results: ProductSearchResult[];
   isLoading?: boolean; // Add loading state
+}
+
+export interface ChatCombinedResponse {
+  chatGptReply: string; // ChatGPT's comment about the search results
+  searchResults: SearchResultType;
 }
 
 // Define the state interface
@@ -136,7 +141,7 @@ interface ChatStore {
   ) => Promise<Conversation | void>;
   addMessageToConversation: (
     conversationId: string,
-    message: string | SearchResultType ,
+    message: string | SearchResultType | ChatCombinedResponse ,
     is_user: boolean,
     token: string,
     is_json?: boolean
@@ -304,7 +309,7 @@ export const useChatStore = create<ChatStore>()(
 
       addMessageToConversation: async (
         conversationId: string,
-        message: string | SearchResultType,
+        message: string | SearchResultType | ChatCombinedResponse,
         is_user: boolean,
         token: string,
         is_json?: boolean
@@ -320,7 +325,7 @@ export const useChatStore = create<ChatStore>()(
         }));
       
         try {
-          // Send the message to the backend
+          // Send the messa ge to the backend
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const response = await fetch(
             `${apiEndpoint}/chatbot/chat/${conversationId}/`,

@@ -12,6 +12,7 @@ import {
   // MessageType,
   ConversationMessage,
   SearchResultType,
+  ChatCombinedResponse,
 } from "@/lib/store";
 import {
   PaperAirplaneIcon,
@@ -20,7 +21,7 @@ import {
   XMarkIcon,
   UserIcon,
   // TrashIcon,
-  ExclamationCircleIcon,
+  // ExclamationCircleIcon,
   ArrowRightIcon,
   //InformationCircleIcon,
   // ShoppingCartIcon,
@@ -307,7 +308,6 @@ const ChatInterface: React.FC = () => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              
             },
             body: JSON.stringify({ messages: [userMessage] }),
           });
@@ -447,7 +447,8 @@ const ChatInterface: React.FC = () => {
               const searchResponse = await fetch(
                 `${apiEndpoint}/shop/search/?query=${encodeURIComponent(
                   data.message.query
-                )}`,   {
+                )}`,
+                {
                   headers: { Authorization: `Token ${token}` },
                 }
               );
@@ -471,12 +472,75 @@ const ChatInterface: React.FC = () => {
                 setSearchResults(chatSearch);
 
                 if (userToken!.key) {
+                  // await addMessageToConversation(
+                  //   conversation!.id,
+                  //   chatSearch, // Pass search results
+                  //   false,
+                  //   userToken.key,
+                  //   true // is_json = true
+                  // );
+
+                  const formattedResults = chatSearch.results.map((product) => {
+                    return {
+                      name: product.name,
+                      url: product.url,
+                      price: `FCFA ${product.price}`,
+                      availability: product.disponibilite || "N/A",
+                      category: product.categorie,
+                      shop: product.boutique_name,
+                      description: product.description,
+                    };
+                  });
+
+                  // Prepare the images and files arrays
+                  const images = formattedResults.map((product) => ({
+                    url: product.url || "", // Add the image URL to the images array, or use a placeholder if none
+                    name: product.name, // Optionally add a name or other metadata
+                  }));
+
+                  const response = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      messages: [
+                        ...recentMessages,
+                        userMessage,
+                        // {
+                        //   role: "system",
+                        //   content:
+                        //     "Here are the product search results. Provide a comment on the best product based on the user's needs:\n\n" +
+                        //     JSON.stringify(formattedResults, null, 2),
+                        // },
+                      ],
+                      images: images.length > 0 ? images : [], // Only pass the images if they exist
+                      files: files || [], // Files array, keep as it is
+                    }),
+                  });
+
+                  if (!response.ok) {
+                    console.error(
+                      "Failed to send product search results to ChatGPT."
+                    );
+                    setApiError(true);
+                    return;
+                  }
+
+                  const chatResponse = await response.json();
+
+                  // Combine ChatGPT's reply with the original search results
+                  const combinedMessage: ChatCombinedResponse = {
+                    chatGptReply:
+                      chatResponse.message?.user_answer ||
+                      "No comment received.",
+                    searchResults: chatSearch, // Include the search results
+                  };
+
                   await addMessageToConversation(
                     conversation!.id,
-                    chatSearch, // Pass search results
+                    combinedMessage, // Combined content
                     false,
                     userToken.key,
-                    true // is_json = true
+                    true
                   );
                 }
               } else {
@@ -541,24 +605,29 @@ const ChatInterface: React.FC = () => {
   ]);
 
   const renderMessageContent = (msg: ConversationMessage) => {
-    if (
-      !msg.content ||
-      (msg.images &&
-        msg.images.length === 0 &&
-        msg.files &&
-        msg.files.length === 0)
-    ) {
-      return; // If the message is empty, return nothing (null)
-    }
+    if (!msg.content && (!msg.images?.length || !msg.files?.length)) return;
 
-    // Check if the message contains search results (JSON with elements)
+    // Check if the content is JSON (for AI search and reply)
     const isJsonContent = msg.is_json && typeof msg.content === "object";
 
     if (isJsonContent) {
-      const searchResults = msg.content as SearchResultType;
+      const { chatGptReply, searchResults } =
+        msg.content as ChatCombinedResponse;
+
       return (
         <div className="bg-white px-4 py-6 rounded-lg shadow-md flex-grow mt-4">
-          {searchResults.results && searchResults.results.length > 0 ? (
+          {/* ChatGPT Reply */}
+          {chatGptReply && (
+            <div className="mb-4">
+              <span className="font-semibold text-gray-800 text-lg">
+                Maguida&apos;s Perspective:
+              </span>
+              <p className="text-gray-700 mt-2">{chatGptReply}</p>
+            </div>
+          )}
+
+          {/* Search Results */}
+          {searchResults?.results?.length > 0 ? (
             <>
               <div className="flex items-center mb-4">
                 <span className="font-semibold text-gray-800 text-lg">
@@ -614,18 +683,15 @@ const ChatInterface: React.FC = () => {
               </motion.div>
               <a
                 href={`/search?term=${encodeURIComponent(searchResults.query)}`}
-                className="text-blue-500 text-sm mt-4 block text-center"
+                className="text-blue-500 text-sm mt-4 text-center flex flex-row justify-center items-center"
               >
+               
                 See More
+                <ArrowRightIcon className="h-3 w-3 ml-2 text-blue-500" />
               </a>
             </>
-          ) : searchResults?.isLoading ? (
-            <div className="flex items-center justify-center py-4">
-              <span className="text-gray-500 text-sm">Loading...</span>
-            </div>
           ) : (
             <div className="flex items-center justify-center py-4">
-              <ExclamationCircleIcon className="h-6 w-6 text-gray-400 mr-2" />
               <span className="text-gray-500 text-sm">No results found</span>
             </div>
           )}
@@ -633,15 +699,15 @@ const ChatInterface: React.FC = () => {
       );
     }
 
-    // Render standard message content (text, images, files)
+    // Standard message content (text + optional images/files)
     return (
       <div className="space-y-2">
-        {/* Text content */}
-        {typeof msg.content === "string" && !msg.is_json && (
+        {/* Text Content */}
+        {typeof msg.content === "string" && (
           <p className="text-gray-800 text-sm">{msg.content}</p>
         )}
 
-        {/* Image preview */}
+        {/* Image Previews */}
         {msg.images && msg.images.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {msg.images.map((img, index) => (
@@ -664,7 +730,7 @@ const ChatInterface: React.FC = () => {
           </div>
         )}
 
-        {/* File attachments */}
+        {/* File Attachments */}
         {msg.files && msg.files.length > 0 && (
           <div className="space-y-1">
             {msg.files.map((file, index) => (
@@ -747,7 +813,10 @@ const ChatInterface: React.FC = () => {
         onAction={modalState.onAction}
       />
       {/* Container with centered content */}
-      <div  ref={messageContainerRef} className="flex-auto bg-white overflow-y-auto -mt-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100  rounded-lg p-6">
+      <div
+        ref={messageContainerRef}
+        className="flex-auto bg-white overflow-y-auto -mt-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100  rounded-lg p-6"
+      >
         {/* Title */}
 
         <motion.h1
@@ -761,7 +830,6 @@ const ChatInterface: React.FC = () => {
 
         {/* Chat Messages Container */}
         <div
-         
           className="mb-6  space-y-4 p-4 bg-white rounded-lg scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pb-16" // Add padding-bottom
         >
           {/* Default AI Initial Message */}
