@@ -291,11 +291,11 @@ export const useChatStore = create<ChatStore>()(
           const data: Conversation = await response.json();
           // console.log(data);
 
-          set((state) => ({
-            firstMessage: message,
-            conversations: [...(state.conversations || []), data],
-            conversation: data,
-          }));
+          // set((state) => ({
+          //   // firstMessage: message,
+          //   conversations: [...(state.conversations || []), data],
+          //   conversation: data,
+          // }));
           return data;
         } catch (error) {
           console.error("Error creating conversation:", error);

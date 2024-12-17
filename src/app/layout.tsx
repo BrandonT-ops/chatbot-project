@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Maguida',
-  description: 'The Ultimate AI-powered Product Search Application',
+  description: 'The Ultimate AI-powered Product Search Application in Cameroon' ,
   icons: '/public/assets/app_logo.svg', 
   applicationName: 'Maguida Product Assistant',
   authors: {url:"Richenel's AI Agency"},

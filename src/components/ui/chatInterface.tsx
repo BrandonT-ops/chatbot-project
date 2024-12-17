@@ -60,7 +60,7 @@ const ChatInterface: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [, setFilePath] = useState<string | null>(null);
   const messageContainerRef = useRef<HTMLDivElement | null>(null);
-  const { addMessage, conversationMessages } = useChatStore();
+  const { conversationMessages } = useChatStore();
   const [apiError, setApiError] = useState(false);
   const apiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
   const {
@@ -269,12 +269,12 @@ const ChatInterface: React.FC = () => {
             return; // Abort if conversation creation fails
           }
 
-          await addMessageToConversation(
-            newConversation.id,
-            input,
-            true,
-            userToken.key
-          );
+          // await addMessageToConversation(
+          //   newConversation.id,
+          //   input,
+          //   true,
+          //   userToken.key
+          // );
           // console.log("A new one was made here");
           // console.log(conversation);
         } else if (conversation) {
@@ -527,11 +527,10 @@ const ChatInterface: React.FC = () => {
     input,
     pendingFiles,
     addMessageToConversation,
-    fetchConversationMessages,
+    // fetchConversationMessages,
     conversation,
     setSearchResults,
     conversationMessages,
-    addMessage,
     setConversation,
     createConversation,
     setConversationMessages,

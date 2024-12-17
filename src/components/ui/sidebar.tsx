@@ -49,8 +49,8 @@ const SideBar = () => {
     clearUserToken();
     clearMessages();
     clearSearch();
-    setIsLoggedIn(false);
     clearConversationMessages();
+    setIsLoggedIn(false);
     setFirstMessage(null);
     setHasSyncedMessages(false);
     setIsStartState(true);
@@ -120,7 +120,14 @@ const SideBar = () => {
       setConversation(null);
       setFirstMessage(null);
       setSearchResults(null);
+      setFirstMessage(null);
+      setHasSyncedMessages(false);
+      setIsStartState(true);
+      setConversation(null);
+      setFirstMessage(null);
+      setSearchResults(null);
       setConversationMessages(null);
+      router.push("/");
       
     } catch (error) {
       console.error("Error creating new conversation:", error);
